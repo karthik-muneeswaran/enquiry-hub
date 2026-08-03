@@ -1,0 +1,257 @@
+{
+  "info": {
+    "name": "Enquiry Backend Platform",
+    "description": "Complete API collection for the Enquiry Backend Platform.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3000" },
+    { "key": "apiPrefix", "value": "/api/v1" },
+    { "key": "apiKey", "value": "dev-api-key-1" },
+    { "key": "hmacSecret", "value": "dev-hmac-secret-for-testing-only" },
+    { "key": "adminApiKey", "value": "admin-secret-key" },
+    { "key": "enquiryId", "value": "" },
+    { "key": "webhookEventId", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Liveness Probe",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/health/live", "host": ["{{baseUrl}}"], "path": ["health", "live"] }
+          }
+        },
+        {
+          "name": "Readiness Probe",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/health/ready", "host": ["{{baseUrl}}"], "path": ["health", "ready"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Enquiry",
+      "item": [
+        {
+          "name": "Create Enquiry",
+          "event": [{ "listen": "test", "script": { "exec": ["if (pm.response.code === 201) { pm.collectionVariables.set('enquiryId', pm.response.json().data.id); }"] } }],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Idempotency-Key", "value": "{{$guid}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"John Doe\",\n  \"email\": \"john@example.com\",\n  \"phone\": \"+61412345678\",\n  \"propertyId\": \"prop-uuid-123\",\n  \"propertyTitle\": \"3 Bed Apartment in Sydney CBD\",\n  \"message\": \"I am interested in scheduling a viewing.\",\n  \"source\": \"website\",\n  \"consentGiven\": true\n}" },
+            "url": { "raw": "{{baseUrl}}{{apiPrefix}}/enquiry", "host": ["{{baseUrl}}{{apiPrefix}}"], "path": ["enquiry"] }
+          }
+        },
+        {
+          "name": "Get Enquiry by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}{{apiPrefix}}/enquiry/{{enquiryId}}", "host": ["{{baseUrl}}{{apiPrefix}}"], "path": ["enquiry", "{{enquiryId}}"] }
+          }
+        },
+        {
+          "name": "List Enquiries (Paginated)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}{{apiPrefix}}/enquiries?limit=20&status=PENDING",
+              "host": ["{{baseUrl}}{{apiPrefix}}"],
+              "path": ["enquiries"],
+              "query": [
+                { "key": "limit", "value": "20" },
+                { "key": "status", "value": "PENDING", "description": "PENDING | PROCESSING | COMPLETED | FAILED | ARCHIVED" },
+                { "key": "cursor", "value": "", "disabled": true },
+                { "key": "search", "value": "", "disabled": true },
+                { "key": "dateFrom", "value": "", "disabled": true },
+                { "key": "dateTo", "value": "", "disabled": true },
+                { "key": "sortBy", "value": "createdAt", "disabled": true },
+                { "key": "sortDir", "value": "desc", "disabled": true }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Enquiry Status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Performed-By", "value": "admin@enquiry.dev" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"status\": \"PROCESSING\"\n}" },
+            "url": { "raw": "{{baseUrl}}{{apiPrefix}}/enquiry/{{enquiryId}}/status", "host": ["{{baseUrl}}{{apiPrefix}}"], "path": ["enquiry", "{{enquiryId}}", "status"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Webhook",
+      "item": [
+        {
+          "name": "Send CRM Webhook",
+          "event": [{ "listen": "prerequest", "script": { "exec": ["const body = pm.request.body.raw;", "const secret = pm.collectionVariables.get('hmacSecret');", "const signature = CryptoJS.HmacSHA256(body, secret).toString(CryptoJS.enc.Hex);", "pm.request.headers.add({ key: 'X-Webhook-Signature', value: 'sha256=' + signature });"] } }],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-API-Key", "value": "{{apiKey}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"eventId\": \"evt_{{$guid}}\",\n  \"type\": \"enquiry.status_changed\",\n  \"source\": \"salesforce\",\n  \"payload\": {\n    \"status\": \"completed\",\n    \"updatedAt\": \"2025-07-01T10:00:00Z\"\n  },\n  \"enquiryId\": \"{{enquiryId}}\"\n}" },
+            "url": { "raw": "{{baseUrl}}{{apiPrefix}}/webhook/crm", "host": ["{{baseUrl}}{{apiPrefix}}"], "path": ["webhook", "crm"] }
+          }
+        },
+        {
+          "name": "List Webhook Events",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}{{apiPrefix}}/webhook/events?limit=20",
+              "host": ["{{baseUrl}}{{apiPrefix}}"],
+              "path": ["webhook", "events"],
+              "query": [
+                { "key": "limit", "value": "20" },
+                { "key": "status", "value": "", "disabled": true },
+                { "key": "type", "value": "", "disabled": true },
+                { "key": "source", "value": "", "disabled": true },
+                { "key": "cursor", "value": "", "disabled": true }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Audit",
+      "item": [
+        {
+          "name": "List Audit Logs",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}{{apiPrefix}}/audit?limit=20",
+              "host": ["{{baseUrl}}{{apiPrefix}}"],
+              "path": ["audit"],
+              "query": [
+                { "key": "limit", "value": "20" },
+                { "key": "cursor", "value": "", "disabled": true },
+                { "key": "search", "value": "", "disabled": true }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "GDPR",
+      "item": [
+        {
+          "name": "Export User Data",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}{{apiPrefix}}/gdpr/export/john@example.com", "host": ["{{baseUrl}}{{apiPrefix}}"], "path": ["gdpr", "export", "john@example.com"] }
+          }
+        },
+        {
+          "name": "Erase User Data",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}{{apiPrefix}}/gdpr/erase/john@example.com", "host": ["{{baseUrl}}{{apiPrefix}}"], "path": ["gdpr", "erase", "john@example.com"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin (Queue Management)",
+      "item": [
+        {
+          "name": "Queue Statistics",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "X-Admin-Key", "value": "{{adminApiKey}}" }],
+            "url": { "raw": "{{baseUrl}}/admin/queues/stats", "host": ["{{baseUrl}}"], "path": ["admin", "queues", "stats"] }
+          }
+        },
+        {
+          "name": "List Dead-Letter Jobs",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "X-Admin-Key", "value": "{{adminApiKey}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/admin/queues/dlq?limit=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "queues", "dlq"],
+              "query": [
+                { "key": "limit", "value": "20" },
+                { "key": "cursor", "value": "", "disabled": true },
+                { "key": "queue", "value": "", "disabled": true },
+                { "key": "search", "value": "", "disabled": true }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Retry Failed Job",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "X-Admin-Key", "value": "{{adminApiKey}}" }],
+            "url": { "raw": "{{baseUrl}}/admin/queues/email-queue/retry/job-id-here", "host": ["{{baseUrl}}"], "path": ["admin", "queues", "email-queue", "retry", "job-id-here"] }
+          }
+        },
+        {
+          "name": "Pause Queue",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "X-Admin-Key", "value": "{{adminApiKey}}" }],
+            "url": { "raw": "{{baseUrl}}/admin/queues/email-queue/pause", "host": ["{{baseUrl}}"], "path": ["admin", "queues", "email-queue", "pause"] }
+          }
+        },
+        {
+          "name": "Resume Queue",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "X-Admin-Key", "value": "{{adminApiKey}}" }],
+            "url": { "raw": "{{baseUrl}}/admin/queues/email-queue/resume", "host": ["{{baseUrl}}"], "path": ["admin", "queues", "email-queue", "resume"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "GraphQL",
+      "item": [
+        {
+          "name": "List Properties",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"query\": \"query { properties(first: 10) { edges { node { id title slug excerpt imageUrl cachedAt } cursor } pageInfo { hasNextPage endCursor } } }\"\n}" },
+            "url": { "raw": "{{baseUrl}}/graphql", "host": ["{{baseUrl}}"], "path": ["graphql"] }
+          }
+        },
+        {
+          "name": "Get Property by Slug",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"query\": \"query { property(slug: \\\"3-bed-apartment-sydney-cbd\\\") { id title slug content excerpt imageUrl cachedAt } }\"\n}" },
+            "url": { "raw": "{{baseUrl}}/graphql", "host": ["{{baseUrl}}"], "path": ["graphql"] }
+          }
+        }
+      ]
+    }
+  ]
+}

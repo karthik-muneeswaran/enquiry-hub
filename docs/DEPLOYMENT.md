@@ -246,6 +246,47 @@ Backups are stored in `/backups/postgres/` with retention:
 
 ---
 
+## Logging Strategy
+
+The platform uses a structured, centralized logging approach:
+
+| Component | Method | Destination |
+|-----------|--------|-------------|
+| Backend (NestJS) | Pino JSON logger (`nestjs-pino`) | stdout → Docker → Promtail → Loki |
+| Nginx | Custom log format with request ID | `/var/log/nginx/access.log` → Promtail → Loki |
+| PostgreSQL | Docker container logs | stdout → Promtail → Loki |
+| Redis | Docker container logs | stdout → Promtail → Loki |
+
+### Log Levels
+
+| Environment | Level | Description |
+|-------------|-------|-------------|
+| Development | `debug` | Verbose output for local debugging |
+| Production | `info` | Balanced detail (no debug noise) |
+
+### Structured Log Fields
+
+Every application log entry includes:
+- `timestamp` — ISO 8601
+- `level` — fatal, error, warn, info, debug
+- `requestId` — correlation ID (matches `X-Request-Id` response header)
+- `method`, `url`, `statusCode` — HTTP context
+- `responseTime` — milliseconds
+- `service` — `enquiry-backend`
+
+### Centralized Viewing
+
+- **Grafana + Loki**: Query logs across all services at `http://grafana:3000/explore`
+- **Label filtering**: Filter by `container_name`, `level`, or grep by `requestId`
+- **Trace correlation**: Click from a log entry to its distributed trace in Tempo via `traceId`
+
+### Log Retention
+
+- Docker containers: managed by Docker's default json-file driver (100MB max, 3 rotated files)
+- Loki: 15 days retention (configurable in `observability/loki/loki-config.yml`)
+
+---
+
 ## Monitoring Access
 
 - **Grafana:** `https://yourdomain.com:3001` (or proxy through Nginx)
