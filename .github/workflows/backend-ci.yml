@@ -12,7 +12,7 @@ on:
       - 'backend/**'
 
 env:
-  NODE_VERSION: '20'
+  NODE_VERSION: '24'
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}/backend
 

@@ -193,7 +193,7 @@ services:
       - app-network
     profiles:
       - e2e
-    command: bash -c "npm ci && npx playwright test --project=chromium"
+    command: bash -c "npm install && npx playwright test --project=chromium"
     deploy:
       resources:
         limits:
