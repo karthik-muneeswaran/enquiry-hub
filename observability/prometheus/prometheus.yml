@@ -1,0 +1,58 @@
+# Prometheus configuration for Enquiry Backend Platform
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  scrape_timeout: 10s
+
+rule_files:
+  - "alerts.yml"
+
+scrape_configs:
+  # Application metrics (OpenTelemetry Prometheus exporter on port 8081)
+  - job_name: "app"
+    static_configs:
+      - targets: ["app:8081"]
+        labels:
+          service: "property-api"
+    metrics_path: /metrics
+    scrape_interval: 10s
+
+  # Redis Exporter
+  - job_name: "redis"
+    static_configs:
+      - targets: ["redis-exporter:9121"]
+        labels:
+          service: "redis"
+
+  # PostgreSQL Exporter
+  - job_name: "postgres"
+    static_configs:
+      - targets: ["postgres-exporter:9187"]
+        labels:
+          service: "postgres"
+
+  # MySQL Exporter (WordPress database)
+  - job_name: "mysql"
+    static_configs:
+      - targets: ["mysql-exporter:9104"]
+        labels:
+          service: "mysql"
+
+  # WordPress Exporter
+  - job_name: "wordpress"
+    static_configs:
+      - targets: ["wordpress-exporter:11011"]
+        labels:
+          service: "wordpress"
+
+  # Nginx Exporter (frontend reverse proxy - production only)
+  - job_name: "nginx"
+    static_configs:
+      - targets: ["nginx-exporter:9113"]
+        labels:
+          service: "nginx"
+
+  # Prometheus self-monitoring
+  - job_name: "prometheus"
+    static_configs:
+      - targets: ["localhost:9090"]

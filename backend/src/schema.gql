@@ -1,0 +1,66 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+"""
+A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
+"""
+scalar DateTime
+
+type PageInfo {
+  endCursor: String
+  hasNextPage: Boolean!
+}
+
+type Property {
+  area: Float
+  bathrooms: Int
+  bedrooms: Int
+  cachedAt: DateTime!
+  content: String
+  createdAt: DateTime!
+  excerpt: String
+  featuredImage: String
+  id: ID!
+  location: String
+  price: Float
+  propertyType: String
+  slug: String!
+  status: String!
+  title: String!
+  updatedAt: DateTime!
+  wpId: Int!
+}
+
+type PropertyConnection {
+  edges: [PropertyEdge!]!
+  pageInfo: PageInfo!
+}
+
+type PropertyEdge {
+  cursor: String!
+  node: Property!
+}
+
+"""Fields available for sorting properties"""
+enum PropertySortField {
+  CACHED_AT
+  CREATED_AT
+  TITLE
+}
+
+type Query {
+  """
+  Paginated property listing with search, sort, and cursor-based pagination
+  """
+  properties(after: String, first: Int = 20, search: String, sortBy: PropertySortField = CACHED_AT, sortDir: SortDirection = DESC): PropertyConnection!
+
+  """Get a single property by slug or WordPress database ID"""
+  property(slug: String, wpId: Int): Property
+}
+
+"""Sort direction (ascending or descending)"""
+enum SortDirection {
+  ASC
+  DESC
+}

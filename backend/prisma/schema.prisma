@@ -1,0 +1,112 @@
+// Prisma schema for Enquiry Backend Platform
+// Database: PostgreSQL 15
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// --- Enums ---
+
+enum EnquiryStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+  ARCHIVED
+}
+
+enum WebhookStatus {
+  RECEIVED
+  PROCESSING
+  PROCESSED
+  FAILED
+  DEAD_LETTER
+}
+
+// --- Models ---
+
+model Enquiry {
+  id             String         @id @default(uuid())
+  name           String
+  email          String
+  phone          String?
+  propertyId     String
+  propertyTitle  String
+  message        String
+  source         String
+  consentGiven   Boolean
+  status         EnquiryStatus  @default(PENDING)
+  idempotencyKey String?        @unique
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  webhookEvents  WebhookEvent[]
+
+  @@index([email, propertyId, createdAt])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model WebhookEvent {
+  id           String        @id @default(uuid())
+  eventId      String        @unique
+  type         String
+  source       String
+  payload      Json
+  status       WebhookStatus @default(RECEIVED)
+  error        String?
+  enquiryId    String?
+  enquiry      Enquiry?      @relation(fields: [enquiryId], references: [id])
+  processedAt  DateTime?
+  attemptCount Int           @default(0)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  @@index([status])
+  @@index([createdAt])
+  @@index([enquiryId])
+}
+
+model Property {
+  id            String   @id @default(uuid())
+  wpId          Int      @unique
+  slug          String   @unique
+  title         String
+  content       String?
+  excerpt       String?
+  featuredImage String?
+  propertyType  String?
+  price         Float?
+  bedrooms      Int?
+  bathrooms     Int?
+  area          Float?
+  location      String?
+  status        String   @default("publish")
+  cachedAt      DateTime @default(now())
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([slug])
+  @@index([wpId])
+}
+
+model AuditLog {
+  id          String   @id @default(uuid())
+  entity      String
+  entityId    String
+  action      String
+  before      Json?
+  after       Json?
+  performedBy String?
+  requestId   String?
+  createdAt   DateTime @default(now())
+
+  @@index([entity, entityId])
+  @@index([createdAt])
+  @@index([requestId])
+}

@@ -1,0 +1,215 @@
+version: "3.8"
+
+# Production overlay — use with: docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+# Ensure backend/.env and frontend/.env have production values before deploying.
+
+services:
+  app:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: production
+    command: []
+    volumes: []
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: "2"
+        reservations:
+          memory: 256M
+    restart: unless-stopped
+    stop_grace_period: 35s
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: production
+    ports:
+      - "5173:80"
+    command: []
+    volumes: []
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+          cpus: "0.5"
+
+  nginx:
+    image: nginx:1.25-alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+      - /var/www/certbot:/var/www/certbot:ro
+    depends_on:
+      - app
+      - frontend
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+          cpus: "0.5"
+    restart: unless-stopped
+    networks:
+      - app-network
+
+  nginx-exporter:
+    image: nginx/nginx-prometheus-exporter:1.1
+    ports:
+      - "9113:9113"
+    command:
+      - "--nginx.scrape-uri=http://nginx:8080/stub_status"
+    depends_on:
+      - nginx
+    deploy:
+      resources:
+        limits:
+          memory: 64M
+          cpus: "0.25"
+    restart: unless-stopped
+    networks:
+      - app-network
+
+  postgres-exporter:
+    deploy:
+      resources:
+        limits:
+          memory: 64M
+          cpus: "0.25"
+    restart: unless-stopped
+
+  redis-exporter:
+    deploy:
+      resources:
+        limits:
+          memory: 64M
+          cpus: "0.25"
+    restart: unless-stopped
+
+  mysql-exporter:
+    deploy:
+      resources:
+        limits:
+          memory: 64M
+          cpus: "0.25"
+    restart: unless-stopped
+
+  wordpress-exporter:
+    deploy:
+      resources:
+        limits:
+          memory: 64M
+          cpus: "0.25"
+    restart: unless-stopped
+
+  postgres:
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: "1"
+        reservations:
+          memory: 128M
+    restart: unless-stopped
+
+  redis:
+    command: redis-server --maxmemory 256mb --maxmemory-policy noeviction --appendonly yes --save 300 100 --save 60 10000
+    deploy:
+      resources:
+        limits:
+          memory: 300M
+          cpus: "0.5"
+        reservations:
+          memory: 64M
+    restart: unless-stopped
+
+  wordpress:
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: "1"
+    restart: unless-stopped
+
+  mysql:
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: "1"
+    restart: unless-stopped
+
+  prometheus:
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: "0.5"
+    restart: unless-stopped
+
+  grafana:
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: "0.5"
+    restart: unless-stopped
+
+  loki:
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: "0.5"
+    restart: unless-stopped
+
+  tempo:
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: "0.5"
+    restart: unless-stopped
+
+  # --- E2E Smoke Tests (post-deploy validation) ---
+  playwright:
+    image: mcr.microsoft.com/playwright:v1.52.0-noble
+    working_dir: /app
+    volumes:
+      - ./frontend:/app
+      - playwright_node_modules:/app/node_modules
+    environment:
+      - CI=true
+      - BASE_URL=${E2E_BASE_URL:-http://nginx:80}
+    depends_on:
+      - nginx
+    networks:
+      - app-network
+    profiles:
+      - e2e
+    command: bash -c "npm ci && npx playwright test --project=chromium"
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: "1"
+
+volumes:
+  pg_data:
+  redis_data:
+  mysql_data:
+  prometheus_data:
+  grafana_data:
+  loki_data:
+  tempo_data:
+  playwright_node_modules:
+
+networks:
+  app-network:
+    driver: bridge

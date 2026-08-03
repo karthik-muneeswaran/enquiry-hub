@@ -1,0 +1,405 @@
+name: Frontend CI/CD
+
+on:
+  push:
+    branches: [main, develop]
+    paths: ['frontend/**']
+  pull_request:
+    branches: [main]
+    paths: ['frontend/**']
+
+env:
+  NODE_VERSION: '20'
+  WORKING_DIR: frontend
+
+jobs:
+  # Gate 1: Lint & Type Check
+  lint:
+    name: Lint & Type Check
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ${{ env.WORKING_DIR }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - run: npm ci
+
+      - name: TypeScript type check
+        run: npx tsc --noEmit
+
+      - name: ESLint
+        run: npm run lint
+
+      - name: Prettier check
+        run: npm run format:check
+
+  # Gate 2: Vitest Component Tests (>= 75% coverage)
+  component-tests:
+    name: Vitest Tests
+    runs-on: ubuntu-latest
+    needs: lint
+    defaults:
+      run:
+        working-directory: ${{ env.WORKING_DIR }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - run: npm ci
+
+      - name: Run Vitest with coverage
+        run: npx vitest run --coverage --reporter=default --reporter=junit --outputFile=junit-report.xml
+
+      - name: Check coverage threshold (>= 75% lines)
+        run: |
+          npx vitest run --coverage --coverage.thresholds.lines=75 --coverage.thresholds.functions=75 --coverage.thresholds.branches=70
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: vitest-coverage
+          path: frontend/coverage/
+          retention-days: 14
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: vitest-junit
+          path: frontend/junit-report.xml
+          retention-days: 14
+
+  # Gate 3: Playwright E2E Tests (full stack via docker compose)
+  e2e-tests:
+    name: Playwright E2E
+    runs-on: ubuntu-latest
+    needs: component-tests
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Create backend .env for CI
+        run: |
+          cat > backend/.env << 'EOF'
+          NODE_ENV=test
+          PORT=3000
+          DATABASE_URL=postgresql://postgres:postgres@postgres:5432/enquiry_test?schema=public
+          REDIS_URL=redis://redis:6379
+          API_KEYS=test-api-key-001,test-api-key-002
+          HMAC_SECRET=ci-test-hmac-secret-key
+          SMTP_HOST=localhost
+          SMTP_PORT=1025
+          SMTP_USER=test
+          SMTP_PASS=test
+          CRM_WEBHOOK_URL=http://app:3000/api/v1/webhooks/test
+          WORDPRESS_GRAPHQL_URL=http://wordpress:80/graphql
+          CORS_ORIGINS=http://frontend:5173,http://localhost:5173
+          GF_SECURITY_ADMIN_PASSWORD=admin
+          POSTGRES_USER=postgres
+          POSTGRES_PASSWORD=postgres
+          POSTGRES_DB=enquiry_test
+          MYSQL_ROOT_PASSWORD=rootpass
+          MYSQL_DATABASE=wordpress
+          WORDPRESS_DB_HOST=mysql
+          WORDPRESS_DB_USER=root
+          WORDPRESS_DB_PASSWORD=rootpass
+          WORDPRESS_DB_NAME=wordpress
+          EOF
+
+      - name: Create frontend .env for CI
+        run: |
+          cat > frontend/.env << 'EOF'
+          VITE_API_BASE_URL=http://app:3000/api/v1
+          VITE_GRAPHQL_URL=http://app:3000/graphql
+          EOF
+
+      - name: Start application stack
+        run: docker compose up -d postgres redis app frontend
+
+      - name: Wait for services to be healthy
+        run: |
+          echo "Waiting for postgres..."
+          timeout 30 bash -c 'until docker compose exec -T postgres pg_isready -U postgres; do sleep 2; done'
+          echo "Waiting for backend..."
+          timeout 60 bash -c 'until docker compose exec -T app wget -qO- http://localhost:3000/api/v1/health > /dev/null 2>&1; do sleep 2; done'
+          echo "Waiting for frontend..."
+          timeout 60 bash -c 'until docker compose exec -T frontend wget -qO- http://localhost:5173 > /dev/null 2>&1; do sleep 2; done'
+          echo "All services ready!"
+
+      - name: Run database migrations
+        run: docker compose exec -T app npx prisma migrate deploy
+
+      - name: Seed database
+        run: docker compose exec -T app npx prisma db seed
+        continue-on-error: true
+
+      - name: Run Playwright E2E tests (containerized)
+        run: docker compose --profile e2e run --rm playwright
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: frontend/playwright-report/
+          retention-days: 14
+
+      - name: Upload Playwright traces (on failure)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-traces
+          path: frontend/test-results/
+          retention-days: 7
+
+      - name: Show service logs on failure
+        if: failure()
+        run: |
+          echo "=== Frontend Logs ==="
+          docker compose logs frontend --tail 50
+          echo "=== Backend Logs ==="
+          docker compose logs app --tail 50
+
+      - name: Stop services
+        if: always()
+        run: docker compose --profile e2e down -v
+
+  # Gate 4: Production Build + Bundle Analysis + Trivy
+  build-and-scan:
+    name: Build & Security Scan
+    runs-on: ubuntu-latest
+    needs: component-tests
+    defaults:
+      run:
+        working-directory: ${{ env.WORKING_DIR }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - run: npm ci
+
+      - name: Production build
+        run: npm run build
+
+      - name: Bundle size analysis
+        run: |
+          echo "=== Bundle Size Analysis ==="
+          # Calculate total JS size (gzipped)
+          TOTAL_JS_SIZE=0
+          LARGEST_CHUNK=0
+
+          for file in dist/assets/*.js; do
+            if [ -f "$file" ]; then
+              GZIP_SIZE=$(gzip -c "$file" | wc -c)
+              FILENAME=$(basename "$file")
+              SIZE_KB=$((GZIP_SIZE / 1024))
+              echo "  $FILENAME: ${SIZE_KB}KB gzipped"
+              TOTAL_JS_SIZE=$((TOTAL_JS_SIZE + GZIP_SIZE))
+              if [ "$GZIP_SIZE" -gt "$LARGEST_CHUNK" ]; then
+                LARGEST_CHUNK=$GZIP_SIZE
+              fi
+            fi
+          done
+
+          TOTAL_KB=$((TOTAL_JS_SIZE / 1024))
+          LARGEST_KB=$((LARGEST_CHUNK / 1024))
+          echo ""
+          echo "Total JS (gzipped): ${TOTAL_KB}KB"
+          echo "Largest chunk (gzipped): ${LARGEST_KB}KB"
+          echo ""
+
+          # Budget: total JS < 500KB gzipped
+          MAX_TOTAL=$((500 * 1024))
+          if [ "$TOTAL_JS_SIZE" -gt "$MAX_TOTAL" ]; then
+            echo "ERROR: Total JS bundle (${TOTAL_KB}KB) exceeds budget of 500KB gzipped"
+            exit 1
+          fi
+
+          # Budget: largest chunk < 200KB gzipped
+          MAX_CHUNK=$((200 * 1024))
+          if [ "$LARGEST_CHUNK" -gt "$MAX_CHUNK" ]; then
+            echo "ERROR: Largest chunk (${LARGEST_KB}KB) exceeds budget of 200KB gzipped"
+            exit 1
+          fi
+
+          echo "Bundle size within budget."
+
+      - name: Run Trivy filesystem scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: 'frontend/'
+          severity: 'CRITICAL,HIGH'
+          exit-code: '1'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+
+      - name: Upload Trivy results
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: trivy-results.sarif
+        continue-on-error: true
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist
+          path: frontend/dist/
+          retention-days: 7
+
+  # Gate 5: Deploy + Smoke (main branch only)
+  deploy:
+    name: Deploy Static Assets
+    runs-on: ubuntu-latest
+    needs: [e2e-tests, build-and-scan]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    environment: production
+    defaults:
+      run:
+        working-directory: ${{ env.WORKING_DIR }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-dist
+          path: frontend/dist/
+
+      - name: Save previous deployment reference
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_SSH_PORT }}
+          script: |
+            cd /opt/property-platform
+            if [ -d "frontend-dist-current" ]; then
+              cp -r frontend-dist-current frontend-dist-previous
+            fi
+
+      - name: Deploy to VPS
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_SSH_PORT }}
+          source: 'frontend/dist/*'
+          target: '/opt/property-platform/frontend-dist-current'
+          strip_components: 2
+
+      - name: Reload Nginx
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_SSH_PORT }}
+          script: |
+            sudo nginx -t && sudo nginx -s reload
+
+  # Gate 5 (continued): Smoke Tests
+  smoke:
+    name: Smoke Tests
+    runs-on: ubuntu-latest
+    needs: deploy
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    defaults:
+      run:
+        working-directory: ${{ env.WORKING_DIR }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run smoke tests
+        env:
+          SMOKE_BASE_URL: ${{ secrets.PRODUCTION_URL }}
+        run: |
+          echo "=== Frontend Smoke Tests ==="
+
+          # Check 1: Frontend loads
+          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "${SMOKE_BASE_URL}/")
+          if [ "$HTTP_CODE" != "200" ]; then
+            echo "FAIL: Frontend root returned $HTTP_CODE (expected 200)"
+            exit 1
+          fi
+          echo "PASS: Frontend root returns 200"
+
+          # Check 2: Contains DOCTYPE (valid HTML)
+          BODY=$(curl -s "${SMOKE_BASE_URL}/")
+          if ! echo "$BODY" | grep -qi "DOCTYPE"; then
+            echo "FAIL: Frontend response does not contain DOCTYPE"
+            exit 1
+          fi
+          echo "PASS: Frontend contains DOCTYPE"
+
+          # Check 3: SPA routes resolve (return 200 via fallback)
+          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "${SMOKE_BASE_URL}/properties")
+          if [ "$HTTP_CODE" != "200" ]; then
+            echo "FAIL: SPA route /properties returned $HTTP_CODE (expected 200)"
+            exit 1
+          fi
+          echo "PASS: SPA route /properties resolves"
+
+          # Check 4: Static assets are served with cache headers
+          ASSET_URL=$(curl -s "${SMOKE_BASE_URL}/" | grep -oP 'src="(/assets/[^"]+)"' | head -1 | cut -d'"' -f2)
+          if [ -n "$ASSET_URL" ]; then
+            CACHE_HEADER=$(curl -s -I "${SMOKE_BASE_URL}${ASSET_URL}" | grep -i "cache-control")
+            if echo "$CACHE_HEADER" | grep -qi "immutable"; then
+              echo "PASS: Static assets have immutable cache headers"
+            else
+              echo "WARN: Static assets missing immutable cache header"
+            fi
+          else
+            echo "SKIP: No asset URL found to verify caching"
+          fi
+
+          # Check 5: Security headers present
+          HEADERS=$(curl -s -I "${SMOKE_BASE_URL}/")
+          if echo "$HEADERS" | grep -qi "x-content-type-options"; then
+            echo "PASS: X-Content-Type-Options header present"
+          else
+            echo "WARN: X-Content-Type-Options header missing"
+          fi
+
+          echo ""
+          echo "=== Smoke tests passed ==="
+
+      - name: Rollback on failure
+        if: failure()
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_SSH_PORT }}
+          script: |
+            cd /opt/property-platform
+            if [ -d "frontend-dist-previous" ]; then
+              rm -rf frontend-dist-current
+              mv frontend-dist-previous frontend-dist-current
+              sudo nginx -t && sudo nginx -s reload
+              echo "Rollback completed successfully"
+            else
+              echo "ERROR: No previous deployment found for rollback"
+              exit 1
+            fi

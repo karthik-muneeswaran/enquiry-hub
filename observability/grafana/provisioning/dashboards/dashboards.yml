@@ -1,0 +1,15 @@
+# Grafana dashboard provisioning for Enquiry Backend Platform
+apiVersion: 1
+
+providers:
+  - name: "Enquiry Platform Dashboards"
+    orgId: 1
+    folder: "Enquiry Platform"
+    type: file
+    disableDeletion: false
+    editable: true
+    updateIntervalSeconds: 30
+    allowUiUpdates: true
+    options:
+      path: /var/lib/grafana/dashboards
+      foldersFromFilesStructure: false

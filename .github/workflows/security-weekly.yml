@@ -1,0 +1,207 @@
+# Weekly security scanning workflow
+# Runs Trivy container/filesystem scans and npm audit for both backend and frontend
+# Creates a GitHub Issue if vulnerabilities are found
+
+name: Weekly Security Scan
+
+on:
+  schedule:
+    # Run every Monday at 07:00 UTC
+    - cron: "0 7 * * 1"
+  workflow_dispatch: # Allow manual trigger
+
+permissions:
+  contents: read
+  issues: write
+  security-events: write
+
+jobs:
+  trivy-backend:
+    name: Trivy Scan - Backend
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run Trivy filesystem scan (backend)
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: "fs"
+          scan-ref: "./backend"
+          format: "json"
+          output: "trivy-backend-fs.json"
+          severity: "CRITICAL,HIGH,MEDIUM"
+
+      - name: Build backend Docker image
+        run: docker build -t enquiry-backend:scan ./backend
+
+      - name: Run Trivy image scan (backend)
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: "image"
+          image-ref: "enquiry-backend:scan"
+          format: "json"
+          output: "trivy-backend-image.json"
+          severity: "CRITICAL,HIGH,MEDIUM"
+
+      - name: Upload backend scan results
+        uses: actions/upload-artifact@v4
+        with:
+          name: trivy-backend-results
+          path: |
+            trivy-backend-fs.json
+            trivy-backend-image.json
+          retention-days: 30
+
+  trivy-frontend:
+    name: Trivy Scan - Frontend
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run Trivy filesystem scan (frontend)
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: "fs"
+          scan-ref: "./frontend"
+          format: "json"
+          output: "trivy-frontend-fs.json"
+          severity: "CRITICAL,HIGH,MEDIUM"
+
+      - name: Build frontend Docker image
+        run: docker build -t enquiry-frontend:scan ./frontend
+
+      - name: Run Trivy image scan (frontend)
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: "image"
+          image-ref: "enquiry-frontend:scan"
+          format: "json"
+          output: "trivy-frontend-image.json"
+          severity: "CRITICAL,HIGH,MEDIUM"
+
+      - name: Upload frontend scan results
+        uses: actions/upload-artifact@v4
+        with:
+          name: trivy-frontend-results
+          path: |
+            trivy-frontend-fs.json
+            trivy-frontend-image.json
+          retention-days: 30
+
+  npm-audit:
+    name: NPM Audit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Run npm audit (backend)
+        working-directory: ./backend
+        run: |
+          npm ci --ignore-scripts
+          npm audit --json > ../npm-audit-backend.json || true
+
+      - name: Run npm audit (frontend)
+        working-directory: ./frontend
+        run: |
+          npm ci --ignore-scripts
+          npm audit --json > ../npm-audit-frontend.json || true
+
+      - name: Upload npm audit results
+        uses: actions/upload-artifact@v4
+        with:
+          name: npm-audit-results
+          path: |
+            npm-audit-backend.json
+            npm-audit-frontend.json
+          retention-days: 30
+
+  generate-report:
+    name: Generate Security Report
+    runs-on: ubuntu-latest
+    needs: [trivy-backend, trivy-frontend, npm-audit]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install TypeScript and ts-node
+        run: npm install -g typescript ts-node @types/node
+
+      - name: Download all scan artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: scan-results
+
+      - name: Flatten scan results
+        run: |
+          mkdir -p scan-output
+          cp scan-results/trivy-backend-results/* scan-output/ 2>/dev/null || true
+          cp scan-results/trivy-frontend-results/* scan-output/ 2>/dev/null || true
+          cp scan-results/npm-audit-results/* scan-output/ 2>/dev/null || true
+
+      - name: Generate SECURITY_REPORT.md
+        run: ts-node scripts/generate-security-report.ts scan-output
+        env:
+          SCAN_DATE: ${{ github.run_id }}
+
+      - name: Upload security report
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-report
+          path: SECURITY_REPORT.md
+          retention-days: 90
+
+      - name: Check for findings and create issue
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const report = fs.readFileSync('SECURITY_REPORT.md', 'utf8');
+
+            // Check if there are any CRITICAL or HIGH findings
+            const hasCritical = report.includes('CRITICAL');
+            const hasHigh = report.includes('| HIGH');
+
+            if (hasCritical || hasHigh) {
+              const title = `🔒 Weekly Security Scan - ${new Date().toISOString().split('T')[0]}`;
+
+              // Check for existing open issue to avoid duplicates
+              const existingIssues = await github.rest.issues.listForRepo({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                state: 'open',
+                labels: 'security',
+                per_page: 5
+              });
+
+              const alreadyExists = existingIssues.data.some(
+                issue => issue.title.startsWith('🔒 Weekly Security Scan')
+              );
+
+              if (!alreadyExists) {
+                await github.rest.issues.create({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  title: title,
+                  body: report,
+                  labels: ['security', 'automated']
+                });
+                console.log('Created security issue');
+              } else {
+                console.log('Security issue already exists, skipping creation');
+              }
+            } else {
+              console.log('No CRITICAL or HIGH vulnerabilities found');
+            }
