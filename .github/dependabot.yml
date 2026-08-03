@@ -67,7 +67,6 @@ updates:
         patterns:
           - "vitest"
           - "@testing-library/*"
-          - "playwright"
         update-types:
           - "minor"
           - "patch"

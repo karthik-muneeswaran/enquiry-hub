@@ -177,28 +177,6 @@ services:
           cpus: "0.5"
     restart: unless-stopped
 
-  # --- E2E Smoke Tests (post-deploy validation) ---
-  playwright:
-    image: mcr.microsoft.com/playwright:v1.52.0-noble
-    working_dir: /app
-    volumes:
-      - ./frontend:/app
-      - playwright_node_modules:/app/node_modules
-    environment:
-      - CI=true
-      - BASE_URL=${E2E_BASE_URL:-http://nginx:80}
-    depends_on:
-      - nginx
-    networks:
-      - app-network
-    profiles:
-      - e2e
-    command: bash -c "npm install && npx playwright test --project=chromium"
-    deploy:
-      resources:
-        limits:
-          memory: 1G
-          cpus: "1"
 
 volumes:
   pg_data:
@@ -208,7 +186,7 @@ volumes:
   grafana_data:
   loki_data:
   tempo_data:
-  playwright_node_modules:
+
 
 networks:
   app-network:

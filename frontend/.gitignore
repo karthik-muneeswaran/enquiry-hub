@@ -18,6 +18,6 @@ Thumbs.db
 # Logs
 *.log
 
-# Playwright
+# Playwright (legacy artifacts)
 playwright-report/
 test-results/

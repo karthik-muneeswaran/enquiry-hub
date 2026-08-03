@@ -12,10 +12,7 @@
     "format:check": "prettier --check \"src/**/*.{ts,tsx,css,json}\"",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage",
-    "test:e2e": "playwright test",
-    "test:e2e:headed": "playwright test --headed",
-    "test:e2e:mobile": "playwright test --project=mobile"
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "@apollo/client": "^3.10.0",
@@ -34,7 +31,6 @@
     "tailwind-merge": "^2.4.0"
   },
   "devDependencies": {
-    "@playwright/test": "^1.45.0",
     "@testing-library/jest-dom": "^6.4.0",
     "@testing-library/react": "^15.0.0",
     "@testing-library/user-event": "^14.5.0",

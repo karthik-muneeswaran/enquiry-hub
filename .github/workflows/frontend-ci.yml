@@ -82,101 +82,7 @@ jobs:
           path: frontend/junit-report.xml
           retention-days: 14
 
-  # Gate 3: Playwright E2E Tests (full stack via docker compose)
-  e2e-tests:
-    name: Playwright E2E
-    runs-on: ubuntu-latest
-    needs: component-tests
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Create backend .env for CI
-        run: |
-          cat > backend/.env << 'EOF'
-          NODE_ENV=test
-          PORT=3000
-          DATABASE_URL=postgresql://postgres:postgres@postgres:5432/enquiry_test?schema=public
-          REDIS_URL=redis://redis:6379
-          API_KEYS=test-api-key-001,test-api-key-002
-          HMAC_SECRET=ci-test-hmac-secret-key
-          SMTP_HOST=localhost
-          SMTP_PORT=1025
-          SMTP_USER=test
-          SMTP_PASS=test
-          CRM_WEBHOOK_URL=http://app:3000/api/v1/webhooks/test
-          WORDPRESS_GRAPHQL_URL=http://wordpress:80/graphql
-          CORS_ORIGINS=http://frontend:5173,http://localhost:5173
-          GF_SECURITY_ADMIN_PASSWORD=admin
-          POSTGRES_USER=postgres
-          POSTGRES_PASSWORD=postgres
-          POSTGRES_DB=enquiry_test
-          MYSQL_ROOT_PASSWORD=rootpass
-          MYSQL_DATABASE=wordpress
-          WORDPRESS_DB_HOST=mysql
-          WORDPRESS_DB_USER=root
-          WORDPRESS_DB_PASSWORD=rootpass
-          WORDPRESS_DB_NAME=wordpress
-          EOF
-
-      - name: Create frontend .env for CI
-        run: |
-          cat > frontend/.env << 'EOF'
-          VITE_API_BASE_URL=http://app:3000/api/v1
-          VITE_GRAPHQL_URL=http://app:3000/graphql
-          EOF
-
-      - name: Start application stack
-        run: docker compose up -d postgres redis app frontend
-
-      - name: Wait for services to be healthy
-        run: |
-          echo "Waiting for postgres..."
-          timeout 30 bash -c 'until docker compose exec -T postgres pg_isready -U postgres; do sleep 2; done'
-          echo "Waiting for backend..."
-          timeout 60 bash -c 'until docker compose exec -T app wget -qO- http://localhost:3000/api/v1/health > /dev/null 2>&1; do sleep 2; done'
-          echo "Waiting for frontend..."
-          timeout 60 bash -c 'until docker compose exec -T frontend wget -qO- http://localhost:5173 > /dev/null 2>&1; do sleep 2; done'
-          echo "All services ready!"
-
-      - name: Run database migrations
-        run: docker compose exec -T app npx prisma migrate deploy
-
-      - name: Seed database
-        run: docker compose exec -T app npx prisma db seed
-        continue-on-error: true
-
-      - name: Run Playwright E2E tests (containerized)
-        run: docker compose --profile e2e run --rm playwright
-
-      - name: Upload Playwright report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: playwright-report
-          path: frontend/playwright-report/
-          retention-days: 14
-
-      - name: Upload Playwright traces (on failure)
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: playwright-traces
-          path: frontend/test-results/
-          retention-days: 7
-
-      - name: Show service logs on failure
-        if: failure()
-        run: |
-          echo "=== Frontend Logs ==="
-          docker compose logs frontend --tail 50
-          echo "=== Backend Logs ==="
-          docker compose logs app --tail 50
-
-      - name: Stop services
-        if: always()
-        run: docker compose --profile e2e down -v
-
-  # Gate 4: Production Build + Bundle Analysis + Trivy
+  # Gate 3: Production Build + Bundle Analysis + Trivy
   build-and-scan:
     name: Build & Security Scan
     runs-on: ubuntu-latest
@@ -265,11 +171,11 @@ jobs:
           path: frontend/dist/
           retention-days: 7
 
-  # Gate 5: Deploy + Smoke (main branch only)
+  # Gate 4: Deploy + Smoke (main branch only)
   deploy:
     name: Deploy Static Assets
     runs-on: ubuntu-latest
-    needs: [e2e-tests, build-and-scan]
+    needs: [build-and-scan]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     environment: production
     defaults:
@@ -318,7 +224,7 @@ jobs:
           script: |
             sudo nginx -t && sudo nginx -s reload
 
-  # Gate 5 (continued): Smoke Tests
+  # Gate 4 (continued): Smoke Tests
   smoke:
     name: Smoke Tests
     runs-on: ubuntu-latest

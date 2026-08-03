@@ -17,7 +17,7 @@ A production-ready, API-driven platform for managing property enquiries, CRM int
 | Observability | OpenTelemetry + Prometheus + Grafana + Loki + Tempo |
 | Deployment | Docker + PM2 + Nginx |
 | CI/CD | GitHub Actions |
-| Testing | Jest + fast-check + Supertest + Vitest + Playwright + k6 |
+| Testing | Jest + fast-check + Supertest + Vitest + k6 |
 
 ---
 

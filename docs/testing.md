@@ -6,7 +6,7 @@ This document covers the testing strategy, test types, local execution workflow,
 
 ## Testing Philosophy
 
-- **Test at the right level** — unit tests for isolated logic, integration tests for cross-boundary interactions, e2e for real user flows.
+- **Test at the right level** — unit tests for isolated logic, integration tests for cross-boundary interactions, smoke tests for deployment validation.
 - **Fast feedback loop** — unit tests complete in seconds, integration tests within a minute. Long-running tests (load, soak) run separately.
 - **Fail early** — CI gates block merges on test failures. Flaky tests are quarantined, not skipped.
 - **Security as a first-class concern** — regression tests cover injection, XSS, prototype pollution, and race conditions.
@@ -18,7 +18,7 @@ This document covers the testing strategy, test types, local execution workflow,
 
 ```
            ┌───────────────┐
-           │     E2E       │   Playwright (browser) + Smoke (API)
+           │    Smoke      │   Health & sanity checks (API)
            ├───────────────┤
            │  Integration  │   Real DB + Redis + full app bootstrap
            ├───────────────┤
@@ -32,7 +32,6 @@ This document covers the testing strategy, test types, local execution workflow,
 | Integration | 15–30s | Module with real DB/Redis | Postgres + Redis |
 | Regression | 15–30s | Security edge cases | Running app |
 | Smoke | 5–10s | Health and sanity checks | Running app |
-| E2E | 30–60s | Full user journeys | Full stack |
 | Load (k6) | Minutes | Performance and capacity | Running app |
 
 ---
@@ -84,17 +83,6 @@ Quick health checks against a running deployment:
 - API key authentication accepts valid keys and rejects invalid ones
 - Basic CRUD operations complete without error
 - Database connectivity is healthy
-
-### End-to-End Tests (Playwright)
-
-Full browser-based testing of critical user journeys:
-
-- **Auth flow** — login, logout, session persistence, token refresh
-- **Property browsing** — list view, search, pagination, detail page
-- **Enquiry submission** — form validation, successful submission, duplicate handling
-- **Resilience** — offline queueing, network error recovery, retry behavior
-
-Viewport coverage: desktop, tablet, mobile.
 
 ### Load Tests (k6)
 
@@ -153,15 +141,6 @@ docker compose exec frontend npm run test
 
 # Unit tests with coverage
 docker compose exec frontend npm run test:coverage
-
-# E2E tests (Playwright, requires full stack running)
-docker compose exec frontend npm run test:e2e
-
-# E2E in headed mode (visible browser for debugging)
-docker compose exec frontend npm run test:e2e:headed
-
-# E2E with mobile viewport
-docker compose exec frontend npm run test:e2e:mobile
 ```
 
 ### Load Tests (k6)
@@ -192,7 +171,7 @@ docker run --rm -i --network host grafana/k6 run - < backend/test/k6/scenarios/s
 └──────────────┘    └───────────────┘    └──────────────────┘    └──────┬──────┘
                                                                         │
                                                                  ┌──────▼──────┐
-                                                                 │ E2E + Smoke │
+                                                                 │   Smoke     │
                                                                  └──────┬──────┘
                                                                         │
                                                                  ┌──────▼──────┐
@@ -240,13 +219,12 @@ steps:
   - docker compose exec app npm run test:regression
 ```
 
-### Stage 4: E2E + Smoke (post-deploy to staging)
+### Stage 4: Smoke (post-deploy to staging)
 
 Validates the deployed staging environment before production promotion.
 
 ```yaml
 - docker compose exec app npm run test:smoke
-- docker compose exec frontend npm run test:e2e
 ```
 
 ### Stage 5: Load Tests (scheduled / manual trigger)
@@ -321,7 +299,6 @@ For isolated CI runs, override `DATABASE_URL` to point to a disposable test data
 | Redis connection refused | Verify Redis container is healthy: `docker compose ps` |
 | Prisma client not generated | Run `docker compose exec app npx prisma generate` |
 | Port conflicts on test run | Stop other instances: `docker compose down` first |
-| Playwright browsers not installed | Run `npx playwright install` inside the frontend container |
 | k6 command not found | Install: `brew install k6` (macOS) or `apt install k6` (Linux) |
 | Coverage below threshold | Check recent changes for untested code paths |
 | Integration tests polluting each other | Ensure `beforeEach` cleans state; run with `--runInBand` |
