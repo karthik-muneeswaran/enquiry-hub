@@ -67,7 +67,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-600">
               <span className="text-sm font-bold text-white">E</span>
             </div>
-            <span className="text-lg font-semibold text-surface-900">Enquiry</span>
+            <span className="text-lg font-semibold text-surface-900">Enquiry<span className="text-brand-600">Hub</span></span>
           </div>
         )}
         {collapsed && (

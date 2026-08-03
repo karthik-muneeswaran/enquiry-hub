@@ -1,4 +1,4 @@
-# Prometheus alert rules for Enquiry Backend Platform
+# Prometheus alert rules for Enquiry Hub Platform
 groups:
   - name: api_alerts
     rules:

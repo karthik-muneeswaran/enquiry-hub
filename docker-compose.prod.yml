@@ -4,7 +4,7 @@ version: "3.8"
 # Ensure backend/.env and frontend/.env have production values before deploying.
 
 services:
-  app:
+  backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
@@ -48,7 +48,7 @@ services:
       - /etc/letsencrypt:/etc/letsencrypt:ro
       - /var/www/certbot:/var/www/certbot:ro
     depends_on:
-      - app
+      - backend
       - frontend
     deploy:
       resources:
@@ -57,7 +57,7 @@ services:
           cpus: "0.5"
     restart: unless-stopped
     networks:
-      - app-network
+      - enquiry-hub-network
 
   nginx-exporter:
     image: nginx/nginx-prometheus-exporter:1.1
@@ -74,7 +74,7 @@ services:
           cpus: "0.25"
     restart: unless-stopped
     networks:
-      - app-network
+      - enquiry-hub-network
 
   postgres-exporter:
     deploy:
@@ -197,7 +197,7 @@ services:
           cpus: "0.25"
     restart: unless-stopped
     networks:
-      - app-network
+      - enquiry-hub-network
 
 
 volumes:
@@ -211,5 +211,5 @@ volumes:
 
 
 networks:
-  app-network:
+  enquiry-hub-network:
     driver: bridge

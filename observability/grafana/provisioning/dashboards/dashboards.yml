@@ -2,7 +2,7 @@
 apiVersion: 1
 
 providers:
-  - name: "Enquiry Platform Dashboards"
+  - name: "Enquiry Hub Dashboards"
     orgId: 1
     folder: "Enquiry Platform"
     type: file

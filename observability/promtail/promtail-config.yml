@@ -23,7 +23,7 @@ scrape_configs:
         regex: '/(.+)'
         target_label: container
       - source_labels: ['__meta_docker_container_name']
-        regex: '/enquiry-backend-platform-(.+)-1'
+        regex: '/enquiry-hub-(.+)-1'
         target_label: service
       # Add compose service label
       - source_labels: ['__meta_docker_container_label_com_docker_compose_service']
@@ -32,7 +32,7 @@ scrape_configs:
       - docker: {}
       # Try to parse JSON logs from the NestJS app
       - match:
-          selector: '{compose_service="app"}'
+          selector: '{compose_service="backend"}'
           stages:
             - json:
                 expressions:

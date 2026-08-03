@@ -16,7 +16,7 @@ export class MetricsService {
   private readonly gaugeValues: Map<string, number> = new Map();
 
   constructor() {
-    this.meter = metrics.getMeter('enquiry-backend-platform');
+    this.meter = metrics.getMeter('enquiry-hub');
     this.initializeCounters();
     this.initializeHistograms();
     this.initializeGauges();

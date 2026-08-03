@@ -1,7 +1,7 @@
 version: "3.8"
 
 services:
-  app:
+  backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
@@ -25,7 +25,7 @@ services:
       redis:
         condition: service_healthy
     networks:
-      - app-network
+      - enquiry-hub-network
 
   frontend:
     build:
@@ -42,9 +42,9 @@ services:
       - ./frontend/index.html:/app/index.html
       - ./frontend/vitest.config.ts:/app/vitest.config.ts
     depends_on:
-      - app
+      - backend
     networks:
-      - app-network
+      - enquiry-hub-network
 
   postgres:
     image: postgres:15-alpine
@@ -60,7 +60,7 @@ services:
       timeout: 5s
       retries: 5
     networks:
-      - app-network
+      - enquiry-hub-network
 
   redis:
     image: redis:7-alpine
@@ -75,7 +75,7 @@ services:
       timeout: 5s
       retries: 5
     networks:
-      - app-network
+      - enquiry-hub-network
 
   wordpress:
     image: wordpress:6-php8.2-apache
@@ -95,7 +95,7 @@ services:
       retries: 10
       start_period: 30s
     networks:
-      - app-network
+      - enquiry-hub-network
 
   wp-setup:
     image: wordpress:cli
@@ -110,7 +110,7 @@ services:
     env_file:
       - ./backend/.env
     networks:
-      - app-network
+      - enquiry-hub-network
 
   mysql:
     image: mysql:8.0
@@ -124,7 +124,7 @@ services:
       timeout: 5s
       retries: 5
     networks:
-      - app-network
+      - enquiry-hub-network
 
   # --- Exporters ---
   postgres-exporter:
@@ -137,7 +137,7 @@ services:
       postgres:
         condition: service_healthy
     networks:
-      - app-network
+      - enquiry-hub-network
 
   redis-exporter:
     image: oliver006/redis_exporter:v1.58.0
@@ -149,7 +149,7 @@ services:
       redis:
         condition: service_healthy
     networks:
-      - app-network
+      - enquiry-hub-network
 
   mysql-exporter:
     image: prom/mysqld-exporter:v0.15.1
@@ -164,7 +164,7 @@ services:
       mysql:
         condition: service_healthy
     networks:
-      - app-network
+      - enquiry-hub-network
 
   wordpress-exporter:
     image: ghcr.io/aorfanos/wordpress-exporter/wordpress-exporter:v0.0.8
@@ -179,7 +179,7 @@ services:
       wordpress:
         condition: service_healthy
     networks:
-      - app-network
+      - enquiry-hub-network
 
   # --- Observability Stack ---
   prometheus:
@@ -200,7 +200,7 @@ services:
       - mysql-exporter
       - wordpress-exporter
     networks:
-      - app-network
+      - enquiry-hub-network
 
   grafana:
     image: grafana/grafana:10.4.0
@@ -217,7 +217,7 @@ services:
       - loki
       - tempo
     networks:
-      - app-network
+      - enquiry-hub-network
 
   loki:
     image: grafana/loki:2.9.0
@@ -228,7 +228,7 @@ services:
       - loki_data:/loki
     command: -config.file=/etc/loki/loki-config.yml
     networks:
-      - app-network
+      - enquiry-hub-network
 
   tempo:
     image: grafana/tempo:2.4.0
@@ -240,7 +240,7 @@ services:
       - tempo_data:/tmp/tempo
     command: -config.file=/etc/tempo/tempo-config.yml
     networks:
-      - app-network
+      - enquiry-hub-network
 
   promtail:
     image: grafana/promtail:3.1.0
@@ -251,7 +251,7 @@ services:
     depends_on:
       - loki
     networks:
-      - app-network
+      - enquiry-hub-network
 
 
 volumes:
@@ -266,5 +266,5 @@ volumes:
 
 
 networks:
-  app-network:
+  enquiry-hub-network:
     driver: bridge

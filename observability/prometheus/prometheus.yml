@@ -1,4 +1,4 @@
-# Prometheus configuration for Enquiry Backend Platform
+# Prometheus configuration for Enquiry Hub Platform
 global:
   scrape_interval: 15s
   evaluation_interval: 15s
@@ -9,11 +9,11 @@ rule_files:
 
 scrape_configs:
   # Application metrics (OpenTelemetry Prometheus exporter on port 8081)
-  - job_name: "app"
+  - job_name: "backend"
     static_configs:
-      - targets: ["app:8081"]
+      - targets: ["backend:8081"]
         labels:
-          service: "property-api"
+          service: "enquiry-hub-api"
     metrics_path: /metrics
     scrape_interval: 10s
 

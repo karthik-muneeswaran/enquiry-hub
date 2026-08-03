@@ -1,7 +1,7 @@
 {
-  "name": "enquiry-backend-platform",
+  "name": "enquiry-hub-backend",
   "version": "0.0.1",
-  "description": "Property Enquiry Backend Platform - NestJS API",
+  "description": "Enquiry Hub - Backend API Platform",
   "author": "",
   "private": true,
   "license": "UNLICENSED",

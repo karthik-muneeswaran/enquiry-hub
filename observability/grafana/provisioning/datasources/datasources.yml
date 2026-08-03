@@ -1,4 +1,4 @@
-# Grafana datasources provisioning for Enquiry Backend Platform
+# Grafana datasources provisioning for Enquiry Hub Platform
 apiVersion: 1
 
 datasources:

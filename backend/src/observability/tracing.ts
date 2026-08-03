@@ -6,7 +6,7 @@ import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
 import { BatchSpanProcessor } from '@opentelemetry/sdk-trace-node';
 import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentations-node';
 
-const serviceName = process.env.OTEL_SERVICE_NAME || 'enquiry-backend';
+const serviceName = process.env.OTEL_SERVICE_NAME || 'enquiry-hub';
 
 const prometheusExporter = new PrometheusExporter({
   port: 8081,
