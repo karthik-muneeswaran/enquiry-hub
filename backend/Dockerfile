@@ -1,5 +1,5 @@
 # Stage 1: Dependencies
-FROM node:24-alpine AS deps
+FROM node:26-alpine AS deps
 RUN apk add --no-cache openssl libc6-compat
 WORKDIR /app
 COPY package*.json ./
@@ -18,7 +18,7 @@ COPY . .
 RUN npm run build
 
 # Stage 4: Production
-FROM node:24-alpine AS production
+FROM node:26-alpine AS production
 RUN apk add --no-cache openssl libc6-compat
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 WORKDIR /app
