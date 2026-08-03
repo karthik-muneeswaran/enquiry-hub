@@ -1,4 +1,5 @@
 export { CreateEnquiryDto } from './create-enquiry.dto';
+export { UpdateEnquiryStatusDto } from './update-status.dto';
 export { ListEnquiriesDto } from './list-enquiries.dto';
 export {
   EnquiryResponseDto,

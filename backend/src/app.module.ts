@@ -77,5 +77,6 @@ import { MetricsService } from './observability/metrics.service';
       useClass: LoadSheddingInterceptor,
     },
   ],
+  exports: [MetricsService],
 })
 export class AppModule {}

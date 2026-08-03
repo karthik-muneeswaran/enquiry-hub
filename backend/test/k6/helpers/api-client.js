@@ -42,13 +42,11 @@ export function getEnquiry(id) {
  * List enquiries with pagination.
  */
 export function listEnquiries(params = {}) {
-  const query = new URLSearchParams({
-    limit: String(params.limit || 20),
-    ...(params.cursor ? { cursor: params.cursor } : {}),
-    ...(params.status ? { status: params.status } : {}),
-  }).toString();
+  const parts = [`limit=${encodeURIComponent(params.limit || 20)}`];
+  if (params.cursor) parts.push(`cursor=${encodeURIComponent(params.cursor)}`);
+  if (params.status) parts.push(`status=${encodeURIComponent(params.status)}`);
 
-  const url = `${BASE_URL}/api/v1/enquiries?${query}`;
+  const url = `${BASE_URL}/api/v1/enquiries?${parts.join('&')}`;
 
   return http.get(url, {
     headers: DEFAULT_HEADERS,

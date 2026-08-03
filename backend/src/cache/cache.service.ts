@@ -320,6 +320,146 @@ export class CacheService implements OnModuleInit, OnModuleDestroy {
     return this.fallbackCache;
   }
 
+  /**
+   * Acquire a distributed mutex lock using SET NX PX.
+   * Returns the lock token on success, null if lock is already held.
+   * Use releaseLock() with the returned token to safely release.
+   */
+  async acquireLock(key: string, ttlMs = 5000): Promise<string | null> {
+    const token = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    try {
+      const result = await this.withTimeout(
+        this.redis.set(`lock:${key}`, token, 'PX', ttlMs, 'NX'),
+      );
+      return result === 'OK' ? token : null;
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * Release a distributed mutex lock safely using Lua script.
+   * Only deletes the lock if the token matches (prevents releasing another client's lock).
+   */
+  async releaseLock(key: string, token: string): Promise<void> {
+    const script = `
+      if redis.call("get", KEYS[1]) == ARGV[1] then
+        return redis.call("del", KEYS[1])
+      end
+      return 0
+    `;
+    try {
+      await this.withTimeout(
+        this.redis.eval(script, 1, `lock:${key}`, token),
+      );
+    } catch (error) {
+      this.logger.warn(`Failed to release lock "${key}"`, (error as Error).message);
+    }
+  }
+
+  /**
+   * Get-or-refresh with mutex stampede protection.
+   * On cache miss, only ONE caller fetches from DB. Others wait and serve fresh result.
+   * On stale, serves stale immediately + one background refresh (mutex-protected).
+   */
+  async getOrRefreshWithLock<T>(
+    key: string,
+    refreshFn: () => Promise<T>,
+    options?: CacheOptions & { lockTtlMs?: number; waitTimeoutMs?: number },
+  ): Promise<T> {
+    const lockTtlMs = options?.lockTtlMs ?? 5000;
+    const waitTimeoutMs = options?.waitTimeoutMs ?? 3000;
+
+    const result = await this.getWithSWR<T>(key, options);
+
+    switch (result.status) {
+      case 'fresh':
+        return result.data;
+
+      case 'stale':
+        // Serve stale immediately, trigger mutex-protected background refresh
+        this.refreshWithLock(key, refreshFn, lockTtlMs, options).catch((err) => {
+          this.logger.warn(`Background refresh with lock failed for "${key}"`, (err as Error).message);
+        });
+        return result.data;
+
+      case 'miss': {
+        // Try to acquire lock — only one caller rebuilds cache
+        const token = await this.acquireLock(key, lockTtlMs);
+
+        if (token) {
+          // We got the lock — fetch from DB, cache it, release lock
+          try {
+            const freshData = await refreshFn();
+            await this.set(key, freshData, options);
+            return freshData;
+          } finally {
+            await this.releaseLock(key, token);
+          }
+        }
+
+        // Lock held by someone else — poll until cache is populated or timeout
+        const data = await this.pollForCache<T>(key, waitTimeoutMs);
+        if (data !== null) {
+          return data;
+        }
+
+        // Timeout — fallback to DB directly (rare edge case)
+        return refreshFn();
+      }
+    }
+  }
+
+  /**
+   * Mark a cache entry as stale without deleting it.
+   * Rewrites the entry with cachedAt backdated so SWR considers it stale.
+   */
+  async markStale(key: string): Promise<void> {
+    if (!this.redisHealthy) return;
+
+    try {
+      const raw = await this.withTimeout(this.redis.get(key));
+      if (!raw) return;
+
+      const entry: CacheEntry<unknown> = JSON.parse(raw);
+      // Backdate cachedAt to make it appear stale (older than any staleTtl)
+      entry.cachedAt = 0;
+
+      // Keep the existing TTL
+      const ttl = await this.withTimeout(this.redis.ttl(key));
+      if (ttl > 0) {
+        await this.withTimeout(
+          this.redis.set(key, JSON.stringify(entry), 'EX', ttl),
+        );
+      }
+    } catch (error) {
+      this.logger.warn(`Failed to mark key "${key}" as stale`, (error as Error).message);
+    }
+  }
+
+  /**
+   * Mark all keys matching a pattern as stale (using SCAN to avoid blocking).
+   */
+  async markStaleByPattern(pattern: string): Promise<void> {
+    if (!this.redisHealthy) return;
+
+    try {
+      let cursor = '0';
+      do {
+        const [nextCursor, keys] = await this.withTimeout(
+          this.redis.scan(cursor, 'MATCH', pattern, 'COUNT', 100),
+        );
+        cursor = nextCursor;
+
+        for (const key of keys) {
+          await this.markStale(key);
+        }
+      } while (cursor !== '0');
+    } catch (error) {
+      this.logger.warn(`Failed to mark stale by pattern "${pattern}"`, (error as Error).message);
+    }
+  }
+
   // --- Private methods ---
 
   private async backgroundRefresh<T>(
@@ -329,6 +469,42 @@ export class CacheService implements OnModuleInit, OnModuleDestroy {
   ): Promise<void> {
     const freshData = await refreshFn();
     await this.set(key, freshData, options);
+  }
+
+  /**
+   * Mutex-protected background refresh: only one caller refreshes at a time.
+   */
+  private async refreshWithLock<T>(
+    key: string,
+    refreshFn: () => Promise<T>,
+    lockTtlMs: number,
+    options?: CacheOptions,
+  ): Promise<void> {
+    const token = await this.acquireLock(key, lockTtlMs);
+    if (!token) return; // Another instance is already refreshing
+
+    try {
+      const freshData = await refreshFn();
+      await this.set(key, freshData, options);
+    } finally {
+      await this.releaseLock(key, token);
+    }
+  }
+
+  /**
+   * Poll Redis for a cache key until it appears or timeout.
+   * Used by waiters when another instance holds the rebuild lock.
+   */
+  private async pollForCache<T>(key: string, timeoutMs: number): Promise<T | null> {
+    const interval = 50; // poll every 50ms
+    const maxAttempts = Math.ceil(timeoutMs / interval);
+
+    for (let i = 0; i < maxAttempts; i++) {
+      const data = await this.get<T>(key);
+      if (data !== null) return data;
+      await new Promise((resolve) => setTimeout(resolve, interval));
+    }
+    return null;
   }
 
   private setupRedisEventListeners(): void {

@@ -30,6 +30,13 @@ export class EnquiryRepository {
     return this.prisma.enquiry.findUnique({ where: { id } });
   }
 
+  async updateStatus(id: string, status: string): Promise<Enquiry> {
+    return this.prisma.enquiry.update({
+      where: { id },
+      data: { status: status as any },
+    });
+  }
+
   async findDuplicate(
     email: string,
     propertyId: string,

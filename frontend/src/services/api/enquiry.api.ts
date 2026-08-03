@@ -60,4 +60,10 @@ export const enquiryApi = {
   list(params: ListEnquiriesParams): Promise<EnquiriesListResponse> {
     return apiClient.get<EnquiriesListResponse>('/enquiries', { params });
   },
+
+  updateStatus(id: string, status: string, performedBy?: string): Promise<Enquiry> {
+    return apiClient.patch<Enquiry>(`/enquiry/${id}/status`, { status }, {
+      headers: performedBy ? { 'X-Performed-By': performedBy } : {},
+    });
+  },
 };

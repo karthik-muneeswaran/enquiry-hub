@@ -1,9 +1,10 @@
 import { useCallback, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { motion } from 'framer-motion';
 import { useEnquiries } from '../hooks/useEnquiries';
+import { useUpdateEnquiryStatus } from '../hooks/useUpdateEnquiryStatus';
 import { ListEnquiriesParams } from '../services/api';
-import { StatCard } from '../components/ui/StatCard';
+import { useAuth } from '../auth/AuthContext';
+import { Permission } from '../auth/users';
 import { Card } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
@@ -11,8 +12,6 @@ import { cn } from '../components/ui/cn';
 import {
   MagnifyingGlassIcon,
   InboxIcon,
-  ClockIcon,
-  CheckCircleIcon,
   XCircleIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
@@ -56,6 +55,9 @@ export function AdminDashboardPage() {
   }), [searchParams]);
 
   const { data, isLoading, isError, isFetching } = useEnquiries(params);
+  const updateStatusMutation = useUpdateEnquiryStatus();
+  const { hasPermission } = useAuth();
+  const canUpdateStatus = hasPermission(Permission.ENQUIRY_UPDATE_STATUS);
 
   const updateFilter = useCallback(
     (key: string, value: string) => {
@@ -93,9 +95,6 @@ export function AdminDashboardPage() {
   const enquiries = data?.data ?? [];
   const pagination = data?.pagination;
 
-  // Calculate summary stats from current data
-  const totalCount = pagination?.totalCount ?? enquiries.length;
-
   return (
     <div className="space-y-6">
       {/* Page header */}
@@ -127,34 +126,6 @@ export function AdminDashboardPage() {
           </span>
         </div>
       </div>
-
-      {/* Summary cards */}
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="grid grid-cols-2 gap-4 lg:grid-cols-4"
-      >
-        <StatCard
-          title="Total Enquiries"
-          value={totalCount}
-          icon={<InboxIcon className="h-6 w-6" />}
-        />
-        <StatCard
-          title="Pending"
-          value={enquiries.filter((e) => e.status === 'PENDING').length}
-          icon={<ClockIcon className="h-6 w-6" />}
-        />
-        <StatCard
-          title="Completed"
-          value={enquiries.filter((e) => e.status === 'COMPLETED').length}
-          icon={<CheckCircleIcon className="h-6 w-6" />}
-        />
-        <StatCard
-          title="Failed"
-          value={enquiries.filter((e) => e.status === 'FAILED').length}
-          icon={<XCircleIcon className="h-6 w-6" />}
-        />
-      </motion.div>
 
       {/* Filters */}
       <Card padding="none">
@@ -286,9 +257,38 @@ export function AdminDashboardPage() {
                           {enquiry.propertyTitle}
                         </td>
                         <td className="whitespace-nowrap px-6 py-4">
-                          <Badge variant={statusInfo.variant} dot>
-                            {statusInfo.label}
-                          </Badge>
+                          {canUpdateStatus ? (
+                            <select
+                              value={enquiry.status}
+                              onClick={(e) => e.stopPropagation()}
+                              onChange={(e) => {
+                                e.stopPropagation();
+                                updateStatusMutation.mutate({
+                                  id: enquiry.id,
+                                  status: e.target.value,
+                                });
+                              }}
+                              className={cn(
+                                'rounded-lg border border-surface-200 bg-white px-2 py-1 text-xs font-medium focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-200',
+                                enquiry.status === 'COMPLETED' && 'text-green-700',
+                                enquiry.status === 'PROCESSING' && 'text-blue-700',
+                                enquiry.status === 'PENDING' && 'text-amber-700',
+                                enquiry.status === 'FAILED' && 'text-red-700',
+                                enquiry.status === 'ARCHIVED' && 'text-surface-500',
+                              )}
+                              disabled={updateStatusMutation.isPending}
+                            >
+                              {STATUS_OPTIONS.map((s) => (
+                                <option key={s} value={s}>
+                                  {STATUS_BADGE_MAP[s].label}
+                                </option>
+                              ))}
+                            </select>
+                          ) : (
+                            <Badge variant={statusInfo.variant} dot>
+                              {statusInfo.label}
+                            </Badge>
+                          )}
                         </td>
                         <td className="whitespace-nowrap px-6 py-4 text-sm text-surface-500">
                           {formatDate(enquiry.createdAt)}
@@ -324,9 +324,31 @@ export function AdminDashboardPage() {
                         </p>
                       </div>
                       <div className="flex flex-col items-end gap-1.5">
-                        <Badge variant={statusInfo.variant} size="sm">
-                          {statusInfo.label}
-                        </Badge>
+                        {canUpdateStatus ? (
+                          <select
+                            value={enquiry.status}
+                            onClick={(e) => e.stopPropagation()}
+                            onChange={(e) => {
+                              e.stopPropagation();
+                              updateStatusMutation.mutate({
+                                id: enquiry.id,
+                                status: e.target.value,
+                              });
+                            }}
+                            className="rounded-lg border border-surface-200 bg-white px-2 py-1 text-xs font-medium focus:border-brand-500 focus:outline-none"
+                            disabled={updateStatusMutation.isPending}
+                          >
+                            {STATUS_OPTIONS.map((s) => (
+                              <option key={s} value={s}>
+                                {STATUS_BADGE_MAP[s].label}
+                              </option>
+                            ))}
+                          </select>
+                        ) : (
+                          <Badge variant={statusInfo.variant} size="sm">
+                            {statusInfo.label}
+                          </Badge>
+                        )}
                         <span className="text-[10px] text-surface-400">
                           {formatDate(enquiry.createdAt)}
                         </span>

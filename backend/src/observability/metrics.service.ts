@@ -28,6 +28,7 @@ export class MetricsService {
         name: 'enquiry_created_total',
         description: 'Total number of enquiries created',
       },
+
       {
         name: 'cache_hit_total',
         description: 'Total number of cache hits',
@@ -59,11 +60,17 @@ export class MetricsService {
       name: string;
       description: string;
       unit: string;
+      advice?: { explicitBucketBoundaries: number[] };
     }> = [
       {
         name: 'http_request_duration_seconds',
         description: 'Duration of HTTP requests in seconds',
         unit: 's',
+        advice: {
+          explicitBucketBoundaries: [
+            0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10,
+          ],
+        },
       },
       {
         name: 'queue_job_duration_seconds',
@@ -78,10 +85,14 @@ export class MetricsService {
     ];
 
     for (const def of histogramDefinitions) {
-      const histogram = this.meter.createHistogram(def.name, {
+      const options: any = {
         description: def.description,
         unit: def.unit,
-      });
+      };
+      if (def.advice) {
+        options.advice = def.advice;
+      }
+      const histogram = this.meter.createHistogram(def.name, options);
       this.histograms.set(def.name, histogram);
     }
   }

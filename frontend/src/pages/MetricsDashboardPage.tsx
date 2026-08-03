@@ -112,7 +112,7 @@ export function MetricsDashboardPage() {
     refetchInterval: 15000,
   });
 
-  const queues = queueStatsResponse?.data?.queues ?? queueStatsResponse?.queues ?? [];
+  const queues = (queueStatsResponse as any)?.data?.queues ?? (queueStatsResponse as any)?.queues ?? [];
 
   // Calculate aggregate stats from queues
   const totalCompleted = queues.reduce((sum: number, q: QueueStat) => sum + q.completed, 0);
@@ -239,19 +239,19 @@ export function MetricsDashboardPage() {
         </motion.div>
         <motion.div variants={itemVariants} className="h-full">
           <StatCard
-            title="In Queue"
-            value={(totalWaiting + totalActive).toLocaleString()}
+            title="Processing"
+            value={processingCount.toLocaleString()}
             icon={<ClockIcon className="h-6 w-6" />}
-            trend={{ value: 0, label: `${totalActive} active, ${totalWaiting} waiting`, positive: true }}
+            trend={{ value: 0, label: 'currently in progress', positive: true }}
             className="h-full"
           />
         </motion.div>
         <motion.div variants={itemVariants} className="h-full">
           <StatCard
             title="Failed"
-            value={totalFailed.toLocaleString()}
+            value={failedCount.toLocaleString()}
             icon={<ExclamationTriangleIcon className="h-6 w-6" />}
-            trend={{ value: totalFailed, label: totalFailed > 0 ? 'needs attention' : 'all clear', positive: totalFailed === 0 }}
+            trend={{ value: failedCount, label: failedCount > 0 ? 'needs attention' : 'all clear', positive: failedCount === 0 }}
             className="h-full"
           />
         </motion.div>
@@ -433,7 +433,15 @@ export function MetricsDashboardPage() {
             </CardBody>
           ) : (
             <div className="divide-y divide-surface-100">
-              {auditLogs.map((log) => (
+              {auditLogs.map((log) => {
+                const before = log.before as Record<string, unknown> | null;
+                const after = log.after as Record<string, unknown> | null;
+                const propertyTitle = (after?.propertyTitle || before?.propertyTitle || '') as string;
+                const enquiryName = (after?.name || before?.name || '') as string;
+                const statusBefore = (before?.status || '') as string;
+                const statusAfter = (after?.status || '') as string;
+
+                return (
                 <div
                   key={log.id}
                   className="flex items-start gap-4 px-5 py-4 sm:px-6 hover:bg-surface-50 transition-colors"
@@ -459,10 +467,30 @@ export function MetricsDashboardPage() {
                       <span className="text-sm font-medium text-surface-900">
                         {log.entity}
                       </span>
-                      <span className="text-xs text-surface-400 font-mono truncate">
-                        {log.entityId}
-                      </span>
+                      {enquiryName && (
+                        <span className="text-sm text-surface-700">
+                          &mdash; {enquiryName}
+                        </span>
+                      )}
                     </div>
+                    {/* Status change detail */}
+                    {log.action === 'UPDATE' && statusBefore && statusAfter && (
+                      <div className="mt-1 flex items-center gap-1.5 text-xs">
+                        <span className="rounded bg-surface-100 px-1.5 py-0.5 font-medium text-surface-600">
+                          {statusBefore}
+                        </span>
+                        <span className="text-surface-400">&rarr;</span>
+                        <span className="rounded bg-brand-50 px-1.5 py-0.5 font-medium text-brand-700">
+                          {statusAfter}
+                        </span>
+                      </div>
+                    )}
+                    {/* Property info */}
+                    {propertyTitle && (
+                      <p className="mt-0.5 text-xs text-surface-400 truncate">
+                        Property: {propertyTitle}
+                      </p>
+                    )}
                     <div className="mt-1 flex items-center gap-3 text-xs text-surface-500">
                       <span>by {log.performedBy || 'system'}</span>
                       <span>&middot;</span>
@@ -477,7 +505,8 @@ export function MetricsDashboardPage() {
                     </div>
                   </div>
                 </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </Card>

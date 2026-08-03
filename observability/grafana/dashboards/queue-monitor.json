@@ -1,7 +1,7 @@
 {
   "uid": "queue-monitor",
   "title": "Queue Monitor",
-  "description": "Per-queue depth, throughput, and dead-letter queue monitoring",
+  "description": "Queue depth, job throughput, and processing duration",
   "tags": ["queues", "bullmq"],
   "timezone": "browser",
   "schemaVersion": 39,
@@ -10,64 +10,14 @@
   "panels": [
     {
       "id": 1,
-      "title": "Queue Depth by State",
-      "type": "barchart",
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "targets": [
-        {
-          "expr": "queue_depth{state=\"waiting\"}",
-          "legendFormat": "{{queue_name}} - Waiting"
-        },
-        {
-          "expr": "queue_depth{state=\"active\"}",
-          "legendFormat": "{{queue_name}} - Active"
-        },
-        {
-          "expr": "queue_depth{state=\"completed\"}",
-          "legendFormat": "{{queue_name}} - Completed"
-        },
-        {
-          "expr": "queue_depth{state=\"failed\"}",
-          "legendFormat": "{{queue_name}} - Failed"
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "short",
-          "custom": { "fillOpacity": 80 }
-        }
-      }
-    },
-    {
-      "id": 2,
-      "title": "Job Throughput (completed/min)",
-      "type": "timeseries",
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "targets": [
-        {
-          "expr": "sum(rate(queue_job_duration_seconds_count{status=\"completed\"}[5m])) by (queue_name) * 60",
-          "legendFormat": "{{queue_name}}"
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "short",
-          "custom": { "drawStyle": "line", "fillOpacity": 10 }
-        }
-      }
-    },
-    {
-      "id": 3,
-      "title": "Dead Letter Queue Depth",
+      "title": "Queue Depth",
       "type": "stat",
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "gridPos": { "h": 6, "w": 8, "x": 0, "y": 0 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "targets": [
         {
-          "expr": "queue_depth{state=\"failed\"}",
-          "legendFormat": "{{queue_name}}"
+          "expr": "queue_depth",
+          "legendFormat": "Pending Jobs"
         }
       ],
       "fieldConfig": {
@@ -77,34 +27,81 @@
             "mode": "absolute",
             "steps": [
               { "color": "green", "value": null },
-              { "color": "yellow", "value": 1 },
-              { "color": "red", "value": 5 }
+              { "color": "yellow", "value": 10 },
+              { "color": "red", "value": 50 }
             ]
           }
         }
       },
       "options": {
         "colorMode": "background",
-        "graphMode": "area",
-        "textMode": "value_and_name"
+        "graphMode": "area"
+      }
+    },
+    {
+      "id": 2,
+      "title": "Queue Depth Over Time",
+      "type": "timeseries",
+      "gridPos": { "h": 6, "w": 16, "x": 8, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        {
+          "expr": "queue_depth",
+          "legendFormat": "Queue Depth"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": { "drawStyle": "line", "fillOpacity": 20 },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 10 },
+              { "color": "red", "value": 50 }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 3,
+      "title": "Job Throughput (completed/min)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 6 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        {
+          "expr": "sum(rate(queue_job_duration_seconds_count[5m])) * 60",
+          "legendFormat": "Jobs/min"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": { "drawStyle": "line", "fillOpacity": 10 },
+          "noValue": "No jobs processed yet"
+        }
       }
     },
     {
       "id": 4,
       "title": "Average Job Processing Duration",
       "type": "timeseries",
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 6 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "targets": [
         {
-          "expr": "sum(rate(queue_job_duration_seconds_sum[5m])) by (queue_name) / sum(rate(queue_job_duration_seconds_count[5m])) by (queue_name)",
-          "legendFormat": "{{queue_name}}"
+          "expr": "sum(rate(queue_job_duration_seconds_sum[5m])) / sum(rate(queue_job_duration_seconds_count[5m]))",
+          "legendFormat": "Avg Duration"
         }
       ],
       "fieldConfig": {
         "defaults": {
           "unit": "s",
           "custom": { "drawStyle": "line", "fillOpacity": 10 },
+          "noValue": "No jobs processed yet",
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -118,20 +115,21 @@
     },
     {
       "id": 5,
-      "title": "Queue Wait Time (enqueue to processing)",
+      "title": "Job Processing p95 Duration",
       "type": "timeseries",
-      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 16 },
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 14 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "targets": [
         {
-          "expr": "histogram_quantile(0.95, sum(rate(queue_job_duration_seconds_bucket{status=\"waiting\"}[5m])) by (le, queue_name))",
-          "legendFormat": "{{queue_name}} p95 wait"
+          "expr": "histogram_quantile(0.95, sum(rate(queue_job_duration_seconds_bucket[5m])) by (le))",
+          "legendFormat": "p95 Job Duration"
         }
       ],
       "fieldConfig": {
         "defaults": {
           "unit": "s",
-          "custom": { "drawStyle": "line", "fillOpacity": 10 }
+          "custom": { "drawStyle": "line", "fillOpacity": 10 },
+          "noValue": "No jobs processed yet"
         }
       }
     }

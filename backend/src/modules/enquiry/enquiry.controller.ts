@@ -2,6 +2,7 @@ import {
   Controller,
   Post,
   Get,
+  Patch,
   Body,
   Param,
   Query,
@@ -24,6 +25,7 @@ import { ETagInterceptor } from '@common/interceptors/etag.interceptor';
 import { EnquiryService } from './enquiry.service';
 import {
   CreateEnquiryDto,
+  UpdateEnquiryStatusDto,
   ListEnquiriesDto,
   EnquiryResponseDto,
   PaginatedEnquiryResponseDto,
@@ -124,5 +126,37 @@ export class EnquiryController {
   })
   async findAll(@Query() query: ListEnquiriesDto) {
     return this.enquiryService.findAll(query);
+  }
+
+  /**
+   * PATCH /api/v1/enquiry/:id/status — Update enquiry status
+   */
+  @Patch('enquiry/:id/status')
+  @RateLimit({ limit: 30, window: 60, scope: 'ip' })
+  @ApiOperation({ summary: 'Update enquiry status' })
+  @ApiParam({ name: 'id', type: 'string', format: 'uuid', description: 'Enquiry UUID' })
+  @ApiResponse({
+    status: 200,
+    description: 'Enquiry status updated successfully',
+    type: EnquiryResponseDto,
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Validation error — invalid status value',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Enquiry not found',
+  })
+  @ApiResponse({
+    status: 429,
+    description: 'Rate limit exceeded',
+  })
+  async updateStatus(
+    @Param('id') id: string,
+    @Body() dto: UpdateEnquiryStatusDto,
+    @Headers('x-performed-by') performedBy?: string,
+  ) {
+    return this.enquiryService.updateStatus(id, dto.status, performedBy || 'system');
   }
 }

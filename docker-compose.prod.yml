@@ -101,6 +101,11 @@ services:
     restart: unless-stopped
 
   wordpress-exporter:
+    command:
+      - "-host"
+      - "http://wordpress:80"
+      - "-auth.basic"
+      - "false"
     deploy:
       resources:
         limits:
@@ -176,6 +181,23 @@ services:
           memory: 256M
           cpus: "0.5"
     restart: unless-stopped
+
+  promtail:
+    image: grafana/promtail:3.1.0
+    volumes:
+      - ./observability/promtail:/etc/promtail
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    command: -config.file=/etc/promtail/promtail-config.yml
+    depends_on:
+      - loki
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+          cpus: "0.25"
+    restart: unless-stopped
+    networks:
+      - app-network
 
 
 volumes:

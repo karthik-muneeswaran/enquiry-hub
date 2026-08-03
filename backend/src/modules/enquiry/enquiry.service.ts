@@ -6,13 +6,15 @@ import {
   NotFoundException,
   Logger,
 } from '@nestjs/common';
-import { Prisma, Enquiry } from '@prisma/client';
+import { Prisma, Enquiry, EnquiryStatus } from '@prisma/client';
 import Redis from 'ioredis';
 import { PrismaService } from '@database/prisma.service';
 import { REDIS_CLIENT } from '@cache/cache.service';
 import { ApiErrorCode } from '@common/response';
 import { NotificationProducer } from '@queue/index';
+import { MetricsService } from '@observability/metrics.service';
 import { EnquiryRepository, PaginatedResult } from './enquiry.repository';
+import { EnquiryCacheService } from './enquiry-cache.service';
 import { CreateEnquiryDto } from './dto/create-enquiry.dto';
 import { ListEnquiriesDto } from './dto/list-enquiries.dto';
 import { IAuditService, AUDIT_SERVICE } from './interfaces';
@@ -24,7 +26,9 @@ export class EnquiryService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly enquiryRepository: EnquiryRepository,
+    private readonly enquiryCacheService: EnquiryCacheService,
     @Inject(REDIS_CLIENT) private readonly redis: Redis,
+    private readonly metricsService: MetricsService,
     @Optional() private readonly notificationProducer?: NotificationProducer,
     @Optional()
     @Inject(AUDIT_SERVICE)
@@ -50,14 +54,14 @@ export class EnquiryService {
       }
     }
 
-    // 2. Check for duplicate enquiry (same email + propertyId within 10 minutes)
-    const duplicate = await this.enquiryRepository.findDuplicate(
+    // 2. Check for duplicate enquiry (Redis-first, then DB fallback)
+    const cachedDup = await this.enquiryCacheService.isDuplicate(
       dto.email,
       dto.propertyId,
-      10,
     );
 
-    if (duplicate) {
+    if (cachedDup === true) {
+      // Redis confirmed duplicate exists
       throw new ConflictException({
         statusCode: 409,
         error: 'Conflict',
@@ -65,6 +69,25 @@ export class EnquiryService {
           'A duplicate enquiry for this property was submitted within the last 10 minutes',
         code: ApiErrorCode.DUPLICATE_ENQUIRY,
       });
+    }
+
+    // Cache miss — check DB as fallback
+    if (cachedDup === null) {
+      const duplicate = await this.enquiryRepository.findDuplicate(
+        dto.email,
+        dto.propertyId,
+        10,
+      );
+
+      if (duplicate) {
+        throw new ConflictException({
+          statusCode: 409,
+          error: 'Conflict',
+          message:
+            'A duplicate enquiry for this property was submitted within the last 10 minutes',
+          code: ApiErrorCode.DUPLICATE_ENQUIRY,
+        });
+      }
     }
 
     // 3. Execute transactional creation (enquiry + audit log)
@@ -106,22 +129,34 @@ export class EnquiryService {
       },
     );
 
-    // 4. Store idempotency key in Redis with 24h TTL
+    // 4. Record business metric
+    this.metricsService.incrementCounter('enquiry_created_total', {
+      source: dto.source || 'unknown',
+    });
+
+    // 5. Store idempotency key in Redis with 24h TTL
     if (idempotencyKey) {
       await this.storeIdempotencyResponse(idempotencyKey, enquiry);
     }
 
-    // 5. Enqueue notifications (don't fail the request if queue is down)
+    // 6. Update cache (write-through for record, mark lists stale, set dup marker)
+    await this.enquiryCacheService.onEnquiryCreated(enquiry);
+
+    // 7. Enqueue notifications (don't fail the request if queue is down)
     await this.enqueueNotifications(enquiry);
 
     return enquiry;
   }
 
   /**
-   * Find an enquiry by ID. Throws NotFoundException if not found.
+   * Find an enquiry by ID. Uses Redis cache with mutex stampede protection.
+   * Throws NotFoundException if not found.
    */
   async findById(id: string): Promise<Enquiry> {
-    const enquiry = await this.enquiryRepository.findById(id);
+    const enquiry = await this.enquiryCacheService.getById(
+      id,
+      () => this.enquiryRepository.findById(id),
+    );
 
     if (!enquiry) {
       throw new NotFoundException({
@@ -137,9 +172,75 @@ export class EnquiryService {
 
   /**
    * Find all enquiries with cursor pagination, filtering, and sorting.
+   * Uses Redis cache with SWR + mutex stampede protection.
    */
   async findAll(params: ListEnquiriesDto): Promise<PaginatedResult<Enquiry>> {
-    return this.enquiryRepository.findWithCursor(params);
+    return this.enquiryCacheService.getList(
+      params,
+      () => this.enquiryRepository.findWithCursor(params),
+    );
+  }
+
+  /**
+   * Update the status of an enquiry.
+   * Records an audit log and updates cache.
+   */
+  async updateStatus(
+    id: string,
+    status: EnquiryStatus,
+    performedBy: string,
+  ): Promise<Enquiry> {
+    // Verify the enquiry exists
+    const existing = await this.enquiryRepository.findById(id);
+    if (!existing) {
+      throw new NotFoundException({
+        statusCode: 404,
+        error: 'Not Found',
+        message: `Enquiry with ID "${id}" not found`,
+        code: ApiErrorCode.NOT_FOUND,
+      });
+    }
+
+    const previousStatus = existing.status;
+
+    // Update status in DB with audit log in a transaction
+    const updated = await this.prisma.$transaction(async (tx) => {
+      const enquiry = await tx.enquiry.update({
+        where: { id },
+        data: { status },
+      });
+
+      await tx.auditLog.create({
+        data: {
+          entity: 'Enquiry',
+          entityId: id,
+          action: 'UPDATE',
+          before: {
+            status: previousStatus,
+            name: existing.name,
+            propertyTitle: existing.propertyTitle,
+          } as unknown as Prisma.InputJsonValue,
+          after: {
+            status,
+            name: existing.name,
+            propertyTitle: existing.propertyTitle,
+          } as unknown as Prisma.InputJsonValue,
+          performedBy,
+          requestId: id,
+        },
+      });
+
+      return enquiry;
+    });
+
+    // Update cache
+    await this.enquiryCacheService.onEnquiryUpdated(updated);
+
+    this.logger.log(
+      `Enquiry ${id} status updated: ${previousStatus} → ${status} by ${performedBy}`,
+    );
+
+    return updated;
   }
 
   /**

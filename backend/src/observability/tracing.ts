@@ -24,8 +24,17 @@ const otelSDK = new NodeSDK({
   spanProcessors: [new BatchSpanProcessor(traceExporter) as any],
   instrumentations: [
     getNodeAutoInstrumentations({
+      '@opentelemetry/instrumentation-fs': {
+        enabled: false,
+      },
+      '@opentelemetry/instrumentation-net': {
+        enabled: false,
+      },
+      '@opentelemetry/instrumentation-dns': {
+        enabled: false,
+      },
       '@opentelemetry/instrumentation-http': {
-        ignoreIncomingPaths: ['/health'],
+        ignoreIncomingPaths: ['/health', '/metrics'],
       },
       '@opentelemetry/instrumentation-pg': {
         enhancedDatabaseReporting: true,

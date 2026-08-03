@@ -70,11 +70,11 @@
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "targets": [
         {
-          "expr": "sum(rate(http_request_duration_seconds_count{status=~\"5..\"}[5m])) / sum(rate(http_request_duration_seconds_count[5m])) * 100",
+          "expr": "(sum(rate(http_request_duration_seconds_count{status=~\"5..\"}[5m])) or vector(0)) / sum(rate(http_request_duration_seconds_count[5m])) * 100",
           "legendFormat": "5xx Error Rate"
         },
         {
-          "expr": "sum(rate(http_request_duration_seconds_count{status=~\"4..\"}[5m])) / sum(rate(http_request_duration_seconds_count[5m])) * 100",
+          "expr": "(sum(rate(http_request_duration_seconds_count{status=~\"4..\"}[5m])) or vector(0)) / sum(rate(http_request_duration_seconds_count[5m])) * 100",
           "legendFormat": "4xx Error Rate"
         }
       ],
@@ -118,14 +118,15 @@
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "targets": [
         {
-          "expr": "sum(rate(rate_limit_triggered_total[5m])) by (endpoint) * 60",
-          "legendFormat": "{{endpoint}}"
+          "expr": "sum(rate(rate_limit_triggered_total[5m])) * 60",
+          "legendFormat": "Rate Limit Triggers/min"
         }
       ],
       "fieldConfig": {
         "defaults": {
           "unit": "short",
-          "custom": { "drawStyle": "bars", "fillOpacity": 80 }
+          "custom": { "drawStyle": "bars", "fillOpacity": 80 },
+          "noValue": "No rate limits triggered"
         }
       }
     },

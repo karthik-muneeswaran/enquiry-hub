@@ -170,8 +170,11 @@ services:
     image: ghcr.io/aorfanos/wordpress-exporter/wordpress-exporter:v0.0.8
     ports:
       - "11011:11011"
-    environment:
-      WORDPRESS_URL: "http://wordpress:80"
+    command:
+      - "-host"
+      - "http://wordpress:80"
+      - "-auth.basic"
+      - "false"
     depends_on:
       wordpress:
         condition: service_healthy
@@ -236,6 +239,17 @@ services:
       - ./observability/tempo:/etc/tempo
       - tempo_data:/tmp/tempo
     command: -config.file=/etc/tempo/tempo-config.yml
+    networks:
+      - app-network
+
+  promtail:
+    image: grafana/promtail:3.1.0
+    volumes:
+      - ./observability/promtail:/etc/promtail
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    command: -config.file=/etc/promtail/promtail-config.yml
+    depends_on:
+      - loki
     networks:
       - app-network
 
