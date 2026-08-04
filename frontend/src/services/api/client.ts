@@ -105,8 +105,8 @@ async function requestWithRetry<T>(config: AxiosRequestConfig): Promise<T> {
 
   for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
     try {
-      const result = await client.request<unknown, T>(config);
-      return result;
+      const result = await client.request(config);
+      return result as T;
     } catch (error) {
       const axiosError = error as AxiosError;
       lastError = axiosError;

@@ -9,7 +9,6 @@ import {
   PropertyNode,
 } from '../graphql/queries';
 import { Button } from '../components/ui/Button';
-import { cn } from '../components/ui/cn';
 import {
   MagnifyingGlassIcon,
   MapPinIcon,

@@ -7,7 +7,6 @@ import type { DeadLetterJob } from '../services/api/admin.api';
 import { Card, CardHeader, CardBody } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
-import { cn } from '../components/ui/cn';
 import {
   PlayIcon,
   PauseIcon,
@@ -16,10 +15,8 @@ import {
   ChevronUpIcon,
   ExclamationTriangleIcon,
   QueueListIcon,
-  SignalIcon,
   ClockIcon,
   CheckCircleIcon,
-  XCircleIcon,
 } from '@heroicons/react/24/outline';
 
 export function QueueDashboardPage() {
@@ -74,8 +71,8 @@ export function QueueDashboardPage() {
     onError: () => addToast('error', 'Failed to retry job'),
   });
 
-  const queues = statsResponse?.data?.queues ?? statsResponse?.queues ?? [];
-  const dlqJobs: DeadLetterJob[] = dlqResponse?.data ?? [];
+  const queues = (statsResponse as any)?.data?.queues ?? (statsResponse as any)?.queues ?? [];
+  const dlqJobs: DeadLetterJob[] = (dlqResponse as any)?.data ?? dlqResponse ?? [];
 
   if (statsLoading) {
     return (

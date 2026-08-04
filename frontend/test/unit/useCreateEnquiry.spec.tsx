@@ -1,6 +1,6 @@
 import { renderHook, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { ReactNode } from 'react';
 import { useCreateEnquiry } from '../../src/hooks/useCreateEnquiry';
 import { UIProvider } from '../../src/providers/UIProvider';

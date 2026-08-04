@@ -1,8 +1,9 @@
 import { renderHook, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { ReactNode } from 'react';
 import { useEnquiries } from '../../src/hooks/useEnquiries';
+import type { ListEnquiriesParams } from '../../src/services/api';
 
 // Mock the API module
 const mockList = vi.fn();
@@ -101,7 +102,7 @@ describe('useEnquiries', () => {
     mockList.mockResolvedValue(mockResponse);
 
     const { result, rerender } = renderHook(
-      ({ params }) => useEnquiries(params),
+      ({ params }: { params: ListEnquiriesParams }) => useEnquiries(params),
       {
         initialProps: { params: { limit: 10, sortDir: 'desc' as const } },
         wrapper: createWrapper(),

@@ -17,7 +17,7 @@ interface UsePersistedFormReturn<T> {
  */
 export function usePersistedForm<T>(
   key: string,
-  defaultValues: T
+  _defaultValues: T
 ): UsePersistedFormReturn<T> {
   const storageKey = `${STORAGE_PREFIX}${key}`;
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);

@@ -17,7 +17,6 @@ import {
   BuildingOfficeIcon,
   XMarkIcon,
   MagnifyingGlassIcon,
-  CheckCircleIcon,
 } from '@heroicons/react/24/outline';
 
 interface EnquiryFormValues {
