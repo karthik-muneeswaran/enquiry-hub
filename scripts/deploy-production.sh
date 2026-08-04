@@ -53,11 +53,12 @@ fi
 
 echo "  All checks passed."
 
-# --- Build Frontend (in container) ---
-echo "[2/8] Building frontend (containerized)..."
-# Frontend Dockerfile handles: npm ci → tsc → vite build → serve with nginx
-# No separate build step needed — docker compose --build does it all.
-echo "  Frontend will be built by Docker Compose (multi-stage Dockerfile)."
+# --- Create root .env for Docker Compose build-arg interpolation ---
+echo "[2/8] Preparing frontend build args..."
+# Docker Compose uses root .env for ${VAR} substitution in compose files
+# Source VITE_ vars from frontend/.env into root .env
+grep "^VITE_" "$PROJECT_DIR/frontend/.env" > "$PROJECT_DIR/.env" 2>/dev/null || true
+echo "  Build args ready."
 
 # --- SSL Certificates ---
 echo "[3/8] Checking SSL certificates..."

@@ -190,11 +190,13 @@ jobs:
           script: |
             cd /opt/enquiry-platform
             git pull origin main
+            # Source VITE_ vars into root .env for Docker Compose build-arg interpolation
+            grep "^VITE_" frontend/.env > .env 2>/dev/null || true
             # Rebuild and restart only the frontend container
             docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build --no-deps frontend
             # Wait for container to be healthy
             sleep 5
-            docker compose ps frontend | grep -q "Up" || exit 1
+            docker compose -f docker-compose.yml -f docker-compose.prod.yml ps frontend | grep -q "Up" || exit 1
             echo "Frontend deployed successfully"
 
   # Gate 5: Smoke Tests
