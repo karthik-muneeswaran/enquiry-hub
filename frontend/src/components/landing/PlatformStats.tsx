@@ -55,9 +55,7 @@ export function PlatformStats() {
             >
               <p className="text-4xl font-bold text-white sm:text-5xl">
                 {stat.value}
-                {stat.suffix && (
-                  <span className="text-brand-400">{stat.suffix}</span>
-                )}
+                {stat.suffix && <span className="text-brand-400">{stat.suffix}</span>}
               </p>
               <p className="mt-2 text-sm text-surface-400">{stat.label}</p>
             </motion.div>

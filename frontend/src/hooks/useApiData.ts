@@ -49,8 +49,7 @@ export function useApiData<T>(fetcher: Fetcher<T>, deps: unknown[] = []) {
       .catch((err: unknown) => {
         if (controller.signal.aborted) return;
 
-        const message =
-          err instanceof Error ? err.message : 'An unexpected error occurred';
+        const message = err instanceof Error ? err.message : 'An unexpected error occurred';
         setState((prev) => ({ ...prev, loading: false, error: message }));
       });
 

@@ -2,12 +2,7 @@ import { useState } from 'react';
 import { useQuery } from '@apollo/client';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import {
-  GET_PROPERTIES,
-  PropertiesData,
-  PropertiesVars,
-  PropertyNode,
-} from '../graphql/queries';
+import { GET_PROPERTIES, PropertiesData, PropertiesVars, PropertyNode } from '../graphql/queries';
 import { Button } from '../components/ui/Button';
 import {
   MagnifyingGlassIcon,
@@ -65,9 +60,7 @@ function PropertyCard({ property, onClick }: { property: PropertyNode; onClick: 
 
       {/* Content */}
       <div className="p-5">
-        <h3 className="text-base font-semibold text-surface-900 line-clamp-1">
-          {property.title}
-        </h3>
+        <h3 className="text-base font-semibold text-surface-900 line-clamp-1">{property.title}</h3>
         {property.excerpt && (
           <p
             className="mt-1.5 text-sm text-surface-500 line-clamp-2 leading-relaxed"
@@ -161,12 +154,8 @@ export function PropertyListPage() {
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-surface-900 sm:text-display-xs">
-            Properties
-          </h1>
-          <p className="mt-1 text-sm text-surface-500">
-            Browse available listings
-          </p>
+          <h1 className="text-2xl font-bold text-surface-900 sm:text-display-xs">Properties</h1>
+          <p className="mt-1 text-sm text-surface-500">Browse available listings</p>
         </div>
         {edges.length > 0 && (
           <span className="text-sm text-surface-400">

@@ -53,8 +53,7 @@ export class OfflineQueue {
         await apiClient.post(item.endpoint, item.data);
         results.push({ id: item.id, status: 'success' });
       } catch (error) {
-        const message =
-          error instanceof Error ? error.message : 'Unknown error';
+        const message = error instanceof Error ? error.message : 'Unknown error';
         results.push({ id: item.id, status: 'error', error: message });
         remaining.push(item);
       }

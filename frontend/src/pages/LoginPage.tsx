@@ -5,11 +5,7 @@ import { motion } from 'framer-motion';
 import { useAuth } from '../auth';
 import { STATIC_USERS } from '../auth';
 import { Button } from '../components/ui/Button';
-import {
-  BuildingOfficeIcon,
-  ChartBarIcon,
-  ShieldCheckIcon,
-} from '@heroicons/react/24/outline';
+import { BuildingOfficeIcon, ChartBarIcon, ShieldCheckIcon } from '@heroicons/react/24/outline';
 
 interface LoginFormData {
   email: string;
@@ -73,7 +69,9 @@ export function LoginPage() {
             className="space-y-8"
           >
             <h2 className="text-3xl font-bold text-white xl:text-4xl leading-tight">
-              Manage property enquiries<br />with confidence
+              Manage property enquiries
+              <br />
+              with confidence
             </h2>
             <div className="space-y-5">
               <FeatureItem
@@ -122,18 +120,11 @@ export function LoginPage() {
           </div>
 
           <div className="space-y-2">
-            <h1 className="text-2xl font-bold text-surface-900 sm:text-3xl">
-              Welcome back
-            </h1>
-            <p className="text-surface-500">
-              Sign in to access your dashboard
-            </p>
+            <h1 className="text-2xl font-bold text-surface-900 sm:text-3xl">Welcome back</h1>
+            <p className="text-surface-500">Sign in to access your dashboard</p>
           </div>
 
-          <form
-            onSubmit={handleSubmit(onSubmit)}
-            className="mt-8 space-y-5"
-          >
+          <form onSubmit={handleSubmit(onSubmit)} className="mt-8 space-y-5">
             {error && (
               <motion.div
                 initial={{ opacity: 0, y: -10 }}
@@ -146,10 +137,7 @@ export function LoginPage() {
             )}
 
             <div>
-              <label
-                htmlFor="email"
-                className="block text-sm font-medium text-surface-700 mb-1.5"
-              >
+              <label htmlFor="email" className="block text-sm font-medium text-surface-700 mb-1.5">
                 Email
               </label>
               <input
@@ -193,28 +181,17 @@ export function LoginPage() {
               )}
             </div>
 
-            <Button
-              type="submit"
-              loading={isSubmitting}
-              fullWidth
-              size="lg"
-              className="mt-2"
-            >
+            <Button type="submit" loading={isSubmitting} fullWidth size="lg" className="mt-2">
               Sign In
             </Button>
           </form>
 
           {/* Test credentials */}
           <div className="mt-8 rounded-2xl border border-amber-200 bg-amber-50/60 p-5">
-            <h3 className="text-sm font-semibold text-amber-800">
-              Demo Credentials
-            </h3>
+            <h3 className="text-sm font-semibold text-amber-800">Demo Credentials</h3>
             <div className="mt-3 space-y-2">
               {STATIC_USERS.map((user) => (
-                <div
-                  key={user.id}
-                  className="flex items-center justify-between text-sm"
-                >
+                <div key={user.id} className="flex items-center justify-between text-sm">
                   <span className="inline-flex items-center rounded-lg bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">
                     {user.role}
                   </span>

@@ -42,7 +42,9 @@ export function EnquiryFormPage() {
   // Property selector state
   const [propertySearch, setPropertySearch] = useState('');
   const [showPropertyDropdown, setShowPropertyDropdown] = useState(false);
-  const [selectedProperty, setSelectedProperty] = useState<{ id: string; title: string } | null>(null);
+  const [selectedProperty, setSelectedProperty] = useState<{ id: string; title: string } | null>(
+    null,
+  );
 
   const {
     register,
@@ -63,10 +65,10 @@ export function EnquiryFormPage() {
     },
   });
 
-  const { data: propertiesData, loading: propertiesLoading } = useQuery<PropertiesData, PropertiesVars>(
-    GET_PROPERTIES,
-    { variables: { first: 50 } },
-  );
+  const { data: propertiesData, loading: propertiesLoading } = useQuery<
+    PropertiesData,
+    PropertiesVars
+  >(GET_PROPERTIES, { variables: { first: 50 } });
 
   const filteredProperties = (propertiesData?.properties.edges ?? []).filter(({ node }) => {
     if (!propertySearch.trim()) return true;
@@ -137,7 +139,10 @@ export function EnquiryFormPage() {
 
       if (!isOnline) {
         offlineQueue.enqueue('/enquiry', payload);
-        addToast('warning', 'You are offline. Your enquiry has been queued and will be sent when you reconnect.');
+        addToast(
+          'warning',
+          'You are offline. Your enquiry has been queued and will be sent when you reconnect.',
+        );
         reset();
         setSelectedProperty(null);
         return;
@@ -234,7 +239,9 @@ export function EnquiryFormPage() {
                 })}
               />
               {errors.name && (
-                <p className="mt-1.5 text-sm text-red-600" role="alert">{errors.name.message}</p>
+                <p className="mt-1.5 text-sm text-red-600" role="alert">
+                  {errors.name.message}
+                </p>
               )}
             </div>
 
@@ -265,7 +272,9 @@ export function EnquiryFormPage() {
                 })}
               />
               {errors.email && (
-                <p className="mt-1.5 text-sm text-red-600" role="alert">{errors.email.message}</p>
+                <p className="mt-1.5 text-sm text-red-600" role="alert">
+                  {errors.email.message}
+                </p>
               )}
             </div>
 
@@ -285,7 +294,9 @@ export function EnquiryFormPage() {
                 })}
               />
               {errors.phone && (
-                <p className="mt-1.5 text-sm text-red-600" role="alert">{errors.phone.message}</p>
+                <p className="mt-1.5 text-sm text-red-600" role="alert">
+                  {errors.phone.message}
+                </p>
               )}
             </div>
 
@@ -336,7 +347,9 @@ export function EnquiryFormPage() {
                       {propertiesLoading ? (
                         <div className="px-4 py-3 text-sm text-surface-500">Loading...</div>
                       ) : filteredProperties.length === 0 ? (
-                        <div className="px-4 py-3 text-sm text-surface-500">No properties found</div>
+                        <div className="px-4 py-3 text-sm text-surface-500">
+                          No properties found
+                        </div>
                       ) : (
                         filteredProperties.map(({ node }) => (
                           <button
@@ -361,15 +374,23 @@ export function EnquiryFormPage() {
               )}
 
               {errors.propertyId && !selectedProperty && (
-                <p className="mt-1.5 text-sm text-red-600" role="alert">Please select a property</p>
+                <p className="mt-1.5 text-sm text-red-600" role="alert">
+                  Please select a property
+                </p>
               )}
-              <input type="hidden" {...register('propertyId', { required: 'Please select a property' })} />
+              <input
+                type="hidden"
+                {...register('propertyId', { required: 'Please select a property' })}
+              />
               <input type="hidden" {...register('propertyTitle', { required: true })} />
             </div>
 
             {/* Message */}
             <div>
-              <label htmlFor="message" className="block text-sm font-medium text-surface-700 mb-1.5">
+              <label
+                htmlFor="message"
+                className="block text-sm font-medium text-surface-700 mb-1.5"
+              >
                 Message <span className="text-red-500">*</span>
               </label>
               <textarea
@@ -390,7 +411,9 @@ export function EnquiryFormPage() {
                 })}
               />
               {errors.message && (
-                <p className="mt-1.5 text-sm text-red-600" role="alert">{errors.message.message}</p>
+                <p className="mt-1.5 text-sm text-red-600" role="alert">
+                  {errors.message.message}
+                </p>
               )}
             </div>
 
@@ -408,12 +431,14 @@ export function EnquiryFormPage() {
                 })}
               />
               <label htmlFor="consent" className="text-sm text-surface-600 leading-relaxed">
-                I consent to the processing of my personal data in accordance with the
-                privacy policy. <span className="text-red-500">*</span>
+                I consent to the processing of my personal data in accordance with the privacy
+                policy. <span className="text-red-500">*</span>
               </label>
             </div>
             {errors.consent && (
-              <p className="text-sm text-red-600" role="alert">{errors.consent.message}</p>
+              <p className="text-sm text-red-600" role="alert">
+                {errors.consent.message}
+              </p>
             )}
 
             {/* Submit */}

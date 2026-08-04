@@ -1,11 +1,4 @@
-import {
-  createContext,
-  useContext,
-  useState,
-  useCallback,
-  useEffect,
-  type ReactNode,
-} from 'react';
+import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { STATIC_USERS, type StaticUser, type Permission, type UserRole } from './users';
 
@@ -49,7 +42,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = useCallback((email: string, password: string): boolean => {
     const found = STATIC_USERS.find(
-      (u) => u.email === email.toLowerCase() && u.password === password
+      (u) => u.email === email.toLowerCase() && u.password === password,
     );
     if (found) {
       setUser(found);
@@ -69,7 +62,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!user) return false;
       return user.permissions.includes(permission);
     },
-    [user]
+    [user],
   );
 
   const hasRole = useCallback(
@@ -77,7 +70,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!user) return false;
       return user.role === role;
     },
-    [user]
+    [user],
   );
 
   const value: AuthContextType = {

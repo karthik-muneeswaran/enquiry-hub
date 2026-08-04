@@ -14,13 +14,7 @@ const paddingStyles = {
   lg: 'p-8',
 };
 
-export function Card({
-  children,
-  hover = false,
-  padding = 'md',
-  className,
-  ...props
-}: CardProps) {
+export function Card({ children, hover = false, padding = 'md', className, ...props }: CardProps) {
   return (
     <div
       className={cn(
@@ -42,10 +36,7 @@ interface CardHeaderProps extends HTMLAttributes<HTMLDivElement> {
 
 export function CardHeader({ children, className, ...props }: CardHeaderProps) {
   return (
-    <div
-      className={cn('border-b border-surface-100 px-6 py-4', className)}
-      {...props}
-    >
+    <div className={cn('border-b border-surface-100 px-6 py-4', className)} {...props}>
       {children}
     </div>
   );
@@ -69,10 +60,7 @@ interface CardFooterProps extends HTMLAttributes<HTMLDivElement> {
 
 export function CardFooter({ children, className, ...props }: CardFooterProps) {
   return (
-    <div
-      className={cn('border-t border-surface-100 px-6 py-4', className)}
-      {...props}
-    >
+    <div className={cn('border-t border-surface-100 px-6 py-4', className)} {...props}>
       {children}
     </div>
   );

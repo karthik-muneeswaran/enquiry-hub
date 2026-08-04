@@ -30,12 +30,32 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
-  { label: 'Dashboard', to: '/dashboard', icon: <ChartBarIcon className="h-5 w-5" />, adminOnly: true },
+  {
+    label: 'Dashboard',
+    to: '/dashboard',
+    icon: <ChartBarIcon className="h-5 w-5" />,
+    adminOnly: true,
+  },
   { label: 'Properties', to: '/properties', icon: <BuildingOfficeIcon className="h-5 w-5" /> },
   { label: 'New Enquiry', to: '/enquiry/new', icon: <PlusCircleIcon className="h-5 w-5" /> },
-  { label: 'Enquiries', to: '/enquiries', icon: <HomeIcon className="h-5 w-5" />, requiredPermission: Permission.ENQUIRY_LIST },
-  { label: 'Queues', to: '/admin/queues', icon: <QueueListIcon className="h-5 w-5" />, adminOnly: true },
-  { label: 'GDPR', to: '/admin/gdpr', icon: <ShieldCheckIcon className="h-5 w-5" />, adminOnly: true },
+  {
+    label: 'Enquiries',
+    to: '/enquiries',
+    icon: <HomeIcon className="h-5 w-5" />,
+    requiredPermission: Permission.ENQUIRY_LIST,
+  },
+  {
+    label: 'Queues',
+    to: '/admin/queues',
+    icon: <QueueListIcon className="h-5 w-5" />,
+    adminOnly: true,
+  },
+  {
+    label: 'GDPR',
+    to: '/admin/gdpr',
+    icon: <ShieldCheckIcon className="h-5 w-5" />,
+    adminOnly: true,
+  },
 ];
 
 export function Sidebar({ collapsed, onToggle }: SidebarProps) {
@@ -43,13 +63,11 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
   const location = useLocation();
   const isAdmin = hasRole(UserRole.ADMIN);
 
-  const filteredItems = navItems.filter(
-    (item) => {
-      if (item.adminOnly && !isAdmin) return false;
-      if (item.requiredPermission && !hasPermission(item.requiredPermission)) return false;
-      return true;
-    },
-  );
+  const filteredItems = navItems.filter((item) => {
+    if (item.adminOnly && !isAdmin) return false;
+    if (item.requiredPermission && !hasPermission(item.requiredPermission)) return false;
+    return true;
+  });
 
   return (
     <aside
@@ -67,7 +85,9 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-600">
               <span className="text-sm font-bold text-white">E</span>
             </div>
-            <span className="text-lg font-semibold text-surface-900">Enquiry<span className="text-brand-600">Hub</span></span>
+            <span className="text-lg font-semibold text-surface-900">
+              Enquiry<span className="text-brand-600">Hub</span>
+            </span>
           </div>
         )}
         {collapsed && (
@@ -98,9 +118,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
                     collapsed && 'justify-center px-2',
                   )}
                 >
-                  <span className={cn('shrink-0', isActive && 'text-brand-600')}>
-                    {item.icon}
-                  </span>
+                  <span className={cn('shrink-0', isActive && 'text-brand-600')}>{item.icon}</span>
                   {!collapsed && <span>{item.label}</span>}
                 </NavLink>
               </li>
@@ -114,14 +132,10 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
         {!collapsed && user && (
           <div className="mb-3 flex items-center gap-3 rounded-xl bg-surface-50 px-3 py-2">
             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-100 text-brand-700">
-              <span className="text-xs font-semibold">
-                {user.name.charAt(0).toUpperCase()}
-              </span>
+              <span className="text-xs font-semibold">{user.name.charAt(0).toUpperCase()}</span>
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-surface-900 truncate">
-                {user.name}
-              </p>
+              <p className="text-sm font-medium text-surface-900 truncate">{user.name}</p>
               <p className="text-xs text-surface-500 truncate">{user.role}</p>
             </div>
           </div>

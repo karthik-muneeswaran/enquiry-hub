@@ -15,14 +15,7 @@ interface StatCardProps {
   className?: string;
 }
 
-export function StatCard({
-  title,
-  value,
-  subtitle,
-  icon,
-  trend,
-  className,
-}: StatCardProps) {
+export function StatCard({ title, value, subtitle, icon, trend, className }: StatCardProps) {
   return (
     <div
       className={cn(
@@ -34,12 +27,8 @@ export function StatCard({
       <div className="flex items-start justify-between">
         <div className="flex-1 min-w-0">
           <p className="text-sm font-medium text-surface-500 truncate">{title}</p>
-          <p className="mt-2 text-3xl font-bold text-surface-900 tracking-tight">
-            {value}
-          </p>
-          {subtitle && (
-            <p className="mt-1 text-sm text-surface-500">{subtitle}</p>
-          )}
+          <p className="mt-2 text-3xl font-bold text-surface-900 tracking-tight">{value}</p>
+          {subtitle && <p className="mt-1 text-sm text-surface-500">{subtitle}</p>}
           {trend && (
             <div className="mt-3 flex items-center gap-1.5">
               <span
@@ -57,9 +46,7 @@ export function StatCard({
                 )}
                 {Math.abs(trend.value)}%
               </span>
-              {trend.label && (
-                <span className="text-xs text-surface-400">{trend.label}</span>
-              )}
+              {trend.label && <span className="text-xs text-surface-400">{trend.label}</span>}
             </div>
           )}
         </div>

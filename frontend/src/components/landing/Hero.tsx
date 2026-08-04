@@ -47,9 +47,8 @@ export function Hero() {
             transition={{ duration: 0.6, delay: 0.2 }}
             className="mx-auto mt-6 max-w-2xl text-lg text-surface-600 leading-relaxed sm:text-xl"
           >
-            Capture, manage, and convert property enquiries with a platform built for
-            real estate teams. Real-time processing, smart queues, and GDPR compliance
-            out of the box.
+            Capture, manage, and convert property enquiries with a platform built for real estate
+            teams. Real-time processing, smart queues, and GDPR compliance out of the box.
           </motion.p>
 
           {/* CTA buttons */}
@@ -121,10 +120,17 @@ export function Hero() {
                     <div className="mt-3 space-y-2">
                       {[
                         { name: 'Sarah M.', property: '3BR Apartment, Sydney', time: '2m ago' },
-                        { name: 'James L.', property: 'Waterfront Villa, Gold Coast', time: '15m ago' },
+                        {
+                          name: 'James L.',
+                          property: 'Waterfront Villa, Gold Coast',
+                          time: '15m ago',
+                        },
                         { name: 'Emma W.', property: 'Studio, Melbourne CBD', time: '1h ago' },
                       ].map((item, i) => (
-                        <div key={i} className="flex items-center justify-between rounded-lg bg-surface-50 px-3 py-2">
+                        <div
+                          key={i}
+                          className="flex items-center justify-between rounded-lg bg-surface-50 px-3 py-2"
+                        >
                           <div>
                             <p className="text-xs font-medium text-surface-800">{item.name}</p>
                             <p className="text-[10px] text-surface-500">{item.property}</p>

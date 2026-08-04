@@ -15,8 +15,7 @@ export function useUpdateEnquiryStatus() {
   const { user } = useAuth();
 
   return useMutation<Enquiry, NormalizedApiError, UpdateStatusVariables>({
-    mutationFn: ({ id, status }) =>
-      enquiryApi.updateStatus(id, status, user?.name),
+    mutationFn: ({ id, status }) => enquiryApi.updateStatus(id, status, user?.name),
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['enquiries'] });
       queryClient.invalidateQueries({ queryKey: ['audit'] });

@@ -57,9 +57,6 @@ export const STATIC_USERS: StaticUser[] = [
     password: 'viewer123',
     name: 'Viewer User',
     role: UserRole.VIEWER,
-    permissions: [
-      Permission.ENQUIRY_READ,
-      Permission.PROPERTY_VIEW,
-    ],
+    permissions: [Permission.ENQUIRY_READ, Permission.PROPERTY_VIEW],
   },
 ];

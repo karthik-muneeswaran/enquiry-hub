@@ -55,26 +55,20 @@ export const adminApi = {
   },
 
   retryJob(queueName: string, jobId: string): Promise<void> {
-    return apiClient.post<void>(
-      `/admin/queues/${queueName}/retry/${jobId}`,
-      undefined,
-      { headers: ADMIN_HEADERS },
-    );
+    return apiClient.post<void>(`/admin/queues/${queueName}/retry/${jobId}`, undefined, {
+      headers: ADMIN_HEADERS,
+    });
   },
 
   pauseQueue(queueName: string): Promise<void> {
-    return apiClient.post<void>(
-      `/admin/queues/${queueName}/pause`,
-      undefined,
-      { headers: ADMIN_HEADERS },
-    );
+    return apiClient.post<void>(`/admin/queues/${queueName}/pause`, undefined, {
+      headers: ADMIN_HEADERS,
+    });
   },
 
   resumeQueue(queueName: string): Promise<void> {
-    return apiClient.post<void>(
-      `/admin/queues/${queueName}/resume`,
-      undefined,
-      { headers: ADMIN_HEADERS },
-    );
+    return apiClient.post<void>(`/admin/queues/${queueName}/resume`, undefined, {
+      headers: ADMIN_HEADERS,
+    });
   },
 };

@@ -65,10 +65,7 @@ client.interceptors.request.use((config: InternalAxiosRequestConfig) => {
   }
 
   // Auto-generate Idempotency-Key for POST requests
-  if (
-    config.method?.toLowerCase() === 'post' &&
-    !config.headers['Idempotency-Key']
-  ) {
+  if (config.method?.toLowerCase() === 'post' && !config.headers['Idempotency-Key']) {
     config.headers['Idempotency-Key'] = crypto.randomUUID();
   }
 

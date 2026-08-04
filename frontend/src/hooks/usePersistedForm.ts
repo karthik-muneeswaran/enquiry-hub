@@ -15,10 +15,7 @@ interface UsePersistedFormReturn<T> {
  * On mount, checks localStorage for previously saved form data.
  * Provides a debounced saveValues function and clearSaved for cleanup on submission.
  */
-export function usePersistedForm<T>(
-  key: string,
-  _defaultValues: T
-): UsePersistedFormReturn<T> {
+export function usePersistedForm<T>(key: string, _defaultValues: T): UsePersistedFormReturn<T> {
   const storageKey = `${STORAGE_PREFIX}${key}`;
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -50,7 +47,7 @@ export function usePersistedForm<T>(
         }
       }, DEBOUNCE_MS);
     },
-    [storageKey]
+    [storageKey],
   );
 
   const clearSaved = useCallback(() => {

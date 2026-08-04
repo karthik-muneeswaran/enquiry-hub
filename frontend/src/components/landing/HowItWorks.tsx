@@ -1,9 +1,5 @@
 import { motion } from 'framer-motion';
-import {
-  BuildingOfficeIcon,
-  PaperAirplaneIcon,
-  BellAlertIcon,
-} from '@heroicons/react/24/outline';
+import { BuildingOfficeIcon, PaperAirplaneIcon, BellAlertIcon } from '@heroicons/react/24/outline';
 import { type ReactNode } from 'react';
 
 interface Step {
@@ -92,9 +88,7 @@ export function HowItWorks() {
               </span>
 
               {/* Content */}
-              <h3 className="mt-3 text-xl font-semibold text-surface-900">
-                {step.title}
-              </h3>
+              <h3 className="mt-3 text-xl font-semibold text-surface-900">{step.title}</h3>
               <p className="mt-2 text-sm text-surface-600 leading-relaxed max-w-xs mx-auto">
                 {step.description}
               </p>

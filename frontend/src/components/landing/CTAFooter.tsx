@@ -26,8 +26,8 @@ export function CTAFooter() {
             ?
           </h2>
           <p className="mx-auto mt-6 max-w-xl text-lg text-surface-600 leading-relaxed">
-            Start managing property enquiries today. Set up takes minutes,
-            not hours. No credit card required.
+            Start managing property enquiries today. Set up takes minutes, not hours. No credit card
+            required.
           </p>
 
           <div className="mt-10 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">

@@ -19,12 +19,7 @@ export interface SkeletonLoaderProps {
 }
 
 function SkeletonPulse({ className = '' }: { className?: string }) {
-  return (
-    <div
-      className={`animate-pulse rounded bg-gray-200 ${className}`}
-      aria-hidden="true"
-    />
-  );
+  return <div className={`animate-pulse rounded bg-gray-200 ${className}`} aria-hidden="true" />;
 }
 
 function CardSkeleton() {
@@ -124,20 +119,11 @@ const SKELETON_MAP: Record<SkeletonType, React.FC> = {
  * placeholder shapes matching the final content dimensions.
  * Used during loading states to prevent content jumps.
  */
-export function SkeletonLoader({
-  type,
-  count = 1,
-  className = '',
-}: SkeletonLoaderProps) {
+export function SkeletonLoader({ type, count = 1, className = '' }: SkeletonLoaderProps) {
   const SkeletonComponent = SKELETON_MAP[type];
 
   return (
-    <div
-      className={className}
-      role="status"
-      aria-label="Loading content"
-      aria-busy="true"
-    >
+    <div className={className} role="status" aria-label="Loading content" aria-busy="true">
       <span className="sr-only">Loading...</span>
       {Array.from({ length: count }, (_, i) => (
         <SkeletonComponent key={i} />

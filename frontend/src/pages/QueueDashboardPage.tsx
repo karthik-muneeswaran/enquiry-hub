@@ -33,10 +33,7 @@ export function QueueDashboardPage() {
     refetchInterval: 15000,
   });
 
-  const {
-    data: dlqResponse,
-    isLoading: dlqLoading,
-  } = useQuery({
+  const { data: dlqResponse, isLoading: dlqLoading } = useQuery({
     queryKey: ['admin', 'dlq'],
     queryFn: () => adminApi.getDlqJobs({ limit: 50 }),
     refetchInterval: 15000,
@@ -71,8 +68,10 @@ export function QueueDashboardPage() {
     onError: () => addToast('error', 'Failed to retry job'),
   });
 
-  const queues: Array<{ name: string; active: number; waiting: number; completed: number; failed: number; delayed: number; paused: boolean }> = (statsResponse as any)?.data?.queues ?? (statsResponse as any)?.queues ?? [];
-  const dlqJobs: DeadLetterJob[] = (dlqResponse as any)?.data ?? dlqResponse ?? [];
+  const queues = statsResponse?.queues ?? [];
+  const dlqJobs: DeadLetterJob[] = Array.isArray(dlqResponse)
+    ? dlqResponse
+    : (dlqResponse?.data ?? []);
 
   if (statsLoading) {
     return (
@@ -85,7 +84,10 @@ export function QueueDashboardPage() {
         </div>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="rounded-2xl border border-surface-200 bg-white p-6 animate-pulse">
+            <div
+              key={i}
+              className="rounded-2xl border border-surface-200 bg-white p-6 animate-pulse"
+            >
               <div className="h-5 w-1/2 rounded bg-surface-200 mb-4" />
               <div className="grid grid-cols-2 gap-3">
                 <div className="h-12 rounded-xl bg-surface-100" />
@@ -120,9 +122,7 @@ export function QueueDashboardPage() {
           <h1 className="text-2xl font-bold text-surface-900 sm:text-display-xs">
             Queue Management
           </h1>
-          <p className="mt-1 text-sm text-surface-500">
-            Monitor and manage background job queues
-          </p>
+          <p className="mt-1 text-sm text-surface-500">Monitor and manage background job queues</p>
         </div>
         <Badge variant="info" dot>
           Auto-refresh 15s
@@ -151,19 +151,27 @@ export function QueueDashboardPage() {
               <div className="grid grid-cols-2 gap-3">
                 <div className="rounded-xl bg-blue-50 p-3 text-center">
                   <p className="text-xl font-bold text-blue-700">{queue.waiting}</p>
-                  <p className="text-[10px] font-medium text-blue-600 uppercase tracking-wide">Waiting</p>
+                  <p className="text-[10px] font-medium text-blue-600 uppercase tracking-wide">
+                    Waiting
+                  </p>
                 </div>
                 <div className="rounded-xl bg-indigo-50 p-3 text-center">
                   <p className="text-xl font-bold text-indigo-700">{queue.active}</p>
-                  <p className="text-[10px] font-medium text-indigo-600 uppercase tracking-wide">Active</p>
+                  <p className="text-[10px] font-medium text-indigo-600 uppercase tracking-wide">
+                    Active
+                  </p>
                 </div>
                 <div className="rounded-xl bg-green-50 p-3 text-center">
                   <p className="text-xl font-bold text-green-700">{queue.completed}</p>
-                  <p className="text-[10px] font-medium text-green-600 uppercase tracking-wide">Done</p>
+                  <p className="text-[10px] font-medium text-green-600 uppercase tracking-wide">
+                    Done
+                  </p>
                 </div>
                 <div className="rounded-xl bg-red-50 p-3 text-center">
                   <p className="text-xl font-bold text-red-700">{queue.failed}</p>
-                  <p className="text-[10px] font-medium text-red-600 uppercase tracking-wide">Failed</p>
+                  <p className="text-[10px] font-medium text-red-600 uppercase tracking-wide">
+                    Failed
+                  </p>
                 </div>
               </div>
 
@@ -204,9 +212,7 @@ export function QueueDashboardPage() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <ExclamationTriangleIcon className="h-5 w-5 text-red-500" />
-              <h2 className="text-base font-semibold text-surface-900">
-                Dead Letter Queue
-              </h2>
+              <h2 className="text-base font-semibold text-surface-900">Dead Letter Queue</h2>
               <Badge variant="danger" size="sm">
                 {dlqJobs.length}
               </Badge>
@@ -267,7 +273,9 @@ function DlqJobRow({
       <div className="flex items-start justify-between gap-4">
         <div className="flex-1 min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            <Badge variant="default" size="sm">{job.queueName}</Badge>
+            <Badge variant="default" size="sm">
+              {job.queueName}
+            </Badge>
             <span className="inline-flex items-center gap-1 text-xs text-surface-400">
               <ClockIcon className="h-3 w-3" />
               {new Date(job.failedAt).toLocaleString()}
@@ -280,11 +288,7 @@ function DlqJobRow({
           <p className="mt-1.5 text-sm text-red-600 truncate">{job.failedReason}</p>
         </div>
         <div className="flex items-center gap-2 shrink-0">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setExpanded(!expanded)}
-          >
+          <Button variant="ghost" size="sm" onClick={() => setExpanded(!expanded)}>
             {expanded ? (
               <ChevronUpIcon className="h-4 w-4" />
             ) : (

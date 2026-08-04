@@ -57,7 +57,11 @@ export function EnquiryDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
 
-  const { data: enquiry, isLoading, isError } = useQuery<Enquiry>({
+  const {
+    data: enquiry,
+    isLoading,
+    isError,
+  } = useQuery<Enquiry>({
     queryKey: ['enquiry', id],
     queryFn: () => enquiryApi.getById(id!),
     enabled: !!id,
@@ -74,17 +78,11 @@ export function EnquiryDetailPage() {
           <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-surface-100">
             <InboxIcon className="h-8 w-8 text-surface-400" />
           </div>
-          <h2 className="mt-4 text-xl font-semibold text-surface-700">
-            Enquiry not found
-          </h2>
+          <h2 className="mt-4 text-xl font-semibold text-surface-700">Enquiry not found</h2>
           <p className="mt-2 text-sm text-surface-500">
             The enquiry you&apos;re looking for doesn&apos;t exist or has been removed.
           </p>
-          <Button
-            variant="secondary"
-            className="mt-4"
-            onClick={() => navigate('/enquiries')}
-          >
+          <Button variant="secondary" className="mt-4" onClick={() => navigate('/enquiries')}>
             Back to Enquiries
           </Button>
         </div>
@@ -99,7 +97,10 @@ export function EnquiryDetailPage() {
     { label: 'Submitted', date: enquiry.createdAt, active: true },
     {
       label: 'Processing',
-      date: enquiry.status === 'PROCESSING' || enquiry.status === 'COMPLETED' ? enquiry.updatedAt : null,
+      date:
+        enquiry.status === 'PROCESSING' || enquiry.status === 'COMPLETED'
+          ? enquiry.updatedAt
+          : null,
       active: enquiry.status === 'PROCESSING' || enquiry.status === 'COMPLETED',
     },
     {
@@ -153,23 +154,30 @@ export function EnquiryDetailPage() {
                 >
                   {index + 1}
                 </div>
-                <span className={cn(
-                  'mt-2 text-xs font-medium',
-                  step.active ? 'text-brand-600' : 'text-surface-400',
-                )}>
+                <span
+                  className={cn(
+                    'mt-2 text-xs font-medium',
+                    step.active ? 'text-brand-600' : 'text-surface-400',
+                  )}
+                >
                   {step.label}
                 </span>
                 {step.date && (
                   <span className="text-[10px] text-surface-400 mt-0.5">
-                    {new Date(step.date).toLocaleDateString('en-AU', { month: 'short', day: 'numeric' })}
+                    {new Date(step.date).toLocaleDateString('en-AU', {
+                      month: 'short',
+                      day: 'numeric',
+                    })}
                   </span>
                 )}
               </div>
               {index < timeline.length - 1 && (
-                <div className={cn(
-                  'flex-1 h-0.5 mx-3',
-                  step.active ? 'bg-brand-300' : 'bg-surface-200',
-                )} />
+                <div
+                  className={cn(
+                    'flex-1 h-0.5 mx-3',
+                    step.active ? 'bg-brand-300' : 'bg-surface-200',
+                  )}
+                />
               )}
             </div>
           ))}
@@ -180,7 +188,11 @@ export function EnquiryDetailPage() {
       <Card padding="none">
         <div className="divide-y divide-surface-100">
           <DetailRow
-            icon={<span className="text-surface-900 font-semibold text-sm">{enquiry.name.charAt(0)}</span>}
+            icon={
+              <span className="text-surface-900 font-semibold text-sm">
+                {enquiry.name.charAt(0)}
+              </span>
+            }
             iconBg="bg-brand-50"
             label="Name"
             value={enquiry.name}

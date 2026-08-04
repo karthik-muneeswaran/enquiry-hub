@@ -14,9 +14,7 @@ export function UnauthorizedPage() {
           You don&apos;t have permission to access this page. Contact your administrator for access.
         </p>
         <Link to="/" className="inline-block mt-6">
-          <Button variant="secondary">
-            Go Home
-          </Button>
+          <Button variant="secondary">Go Home</Button>
         </Link>
       </div>
     </div>

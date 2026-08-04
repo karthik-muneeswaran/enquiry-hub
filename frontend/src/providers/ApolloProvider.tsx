@@ -51,9 +51,5 @@ interface ApolloProviderProps {
 }
 
 export function ApolloProvider({ children }: ApolloProviderProps) {
-  return (
-    <BaseApolloProvider client={apolloClient}>
-      {children}
-    </BaseApolloProvider>
-  );
+  return <BaseApolloProvider client={apolloClient}>{children}</BaseApolloProvider>;
 }

@@ -44,10 +44,7 @@ interface EnquiriesListResponse {
 }
 
 export const enquiryApi = {
-  create(
-    payload: CreateEnquiryPayload,
-    idempotencyKey?: string,
-  ): Promise<Enquiry> {
+  create(payload: CreateEnquiryPayload, idempotencyKey?: string): Promise<Enquiry> {
     return apiClient.post<Enquiry>('/enquiry', payload, {
       headers: idempotencyKey ? { 'Idempotency-Key': idempotencyKey } : {},
     });
@@ -62,8 +59,12 @@ export const enquiryApi = {
   },
 
   updateStatus(id: string, status: string, performedBy?: string): Promise<Enquiry> {
-    return apiClient.patch<Enquiry>(`/enquiry/${id}/status`, { status }, {
-      headers: performedBy ? { 'X-Performed-By': performedBy } : {},
-    });
+    return apiClient.patch<Enquiry>(
+      `/enquiry/${id}/status`,
+      { status },
+      {
+        headers: performedBy ? { 'X-Performed-By': performedBy } : {},
+      },
+    );
   },
 };

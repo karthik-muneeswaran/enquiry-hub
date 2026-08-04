@@ -23,19 +23,13 @@ interface GdprExportResponse {
 }
 
 export const gdprApi = {
-  exportData(
-    email: string,
-    params?: GdprExportParams,
-  ): Promise<GdprExportResponse> {
-    return apiClient.get<GdprExportResponse>(
-      `/gdpr/export/${encodeURIComponent(email)}`,
-      { params },
-    );
+  exportData(email: string, params?: GdprExportParams): Promise<GdprExportResponse> {
+    return apiClient.get<GdprExportResponse>(`/gdpr/export/${encodeURIComponent(email)}`, {
+      params,
+    });
   },
 
   eraseData(email: string): Promise<GdprEraseResult> {
-    return apiClient.delete<GdprEraseResult>(
-      `/gdpr/erase/${encodeURIComponent(email)}`,
-    );
+    return apiClient.delete<GdprEraseResult>(`/gdpr/erase/${encodeURIComponent(email)}`);
   },
 };

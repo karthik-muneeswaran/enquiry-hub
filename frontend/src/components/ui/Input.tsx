@@ -16,10 +16,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
     return (
       <div className={cn(fullWidth && 'w-full')}>
         {label && (
-          <label
-            htmlFor={inputId}
-            className="block text-sm font-medium text-surface-700 mb-1.5"
-          >
+          <label htmlFor={inputId} className="block text-sm font-medium text-surface-700 mb-1.5">
             {label}
           </label>
         )}
@@ -33,9 +30,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             ref={ref}
             id={inputId}
             aria-invalid={!!error}
-            aria-describedby={
-              error ? `${inputId}-error` : hint ? `${inputId}-hint` : undefined
-            }
+            aria-describedby={error ? `${inputId}-error` : hint ? `${inputId}-hint` : undefined}
             className={cn(
               'block w-full rounded-xl border bg-white px-4 py-2.5 text-sm text-surface-900',
               'placeholder:text-surface-400',
@@ -52,11 +47,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
           />
         </div>
         {error && (
-          <p
-            id={`${inputId}-error`}
-            className="mt-1.5 text-sm text-red-600"
-            role="alert"
-          >
+          <p id={`${inputId}-error`} className="mt-1.5 text-sm text-red-600" role="alert">
             {error}
           </p>
         )}
@@ -72,8 +63,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
 
 Input.displayName = 'Input';
 
-interface TextareaProps
-  extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
+interface TextareaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
   label?: string;
   error?: string;
   hint?: string;
@@ -86,10 +76,7 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
     return (
       <div className="w-full">
         {label && (
-          <label
-            htmlFor={inputId}
-            className="block text-sm font-medium text-surface-700 mb-1.5"
-          >
+          <label htmlFor={inputId} className="block text-sm font-medium text-surface-700 mb-1.5">
             {label}
           </label>
         )}
@@ -115,9 +102,7 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
             {error}
           </p>
         )}
-        {!error && hint && (
-          <p className="mt-1.5 text-sm text-surface-500">{hint}</p>
-        )}
+        {!error && hint && <p className="mt-1.5 text-sm text-surface-500">{hint}</p>}
       </div>
     );
   },
@@ -138,10 +123,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
     return (
       <div className="w-full">
         {label && (
-          <label
-            htmlFor={inputId}
-            className="block text-sm font-medium text-surface-700 mb-1.5"
-          >
+          <label htmlFor={inputId} className="block text-sm font-medium text-surface-700 mb-1.5">
             {label}
           </label>
         )}

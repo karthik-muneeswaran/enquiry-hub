@@ -18,10 +18,8 @@ const variantStyles: Record<ButtonVariant, string> = {
     'bg-brand-600 text-white hover:bg-brand-700 focus:ring-brand-500 shadow-sm active:bg-brand-800',
   secondary:
     'bg-surface-100 text-surface-700 hover:bg-surface-200 focus:ring-surface-400 border border-surface-200 active:bg-surface-300',
-  ghost:
-    'text-surface-600 hover:bg-surface-100 hover:text-surface-900 focus:ring-surface-400',
-  danger:
-    'bg-red-600 text-white hover:bg-red-700 focus:ring-red-500 shadow-sm active:bg-red-800',
+  ghost: 'text-surface-600 hover:bg-surface-100 hover:text-surface-900 focus:ring-surface-400',
+  danger: 'bg-red-600 text-white hover:bg-red-700 focus:ring-red-500 shadow-sm active:bg-red-800',
   outline:
     'border-2 border-brand-600 text-brand-600 hover:bg-brand-50 focus:ring-brand-500 active:bg-brand-100',
 };

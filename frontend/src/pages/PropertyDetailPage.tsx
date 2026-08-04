@@ -48,17 +48,11 @@ export function PropertyDetailPage() {
           <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-surface-100">
             <HomeModernIcon className="h-8 w-8 text-surface-400" />
           </div>
-          <h2 className="mt-4 text-xl font-semibold text-surface-700">
-            Property unavailable
-          </h2>
+          <h2 className="mt-4 text-xl font-semibold text-surface-700">Property unavailable</h2>
           <p className="mt-2 text-sm text-surface-500">
             We&apos;re having trouble loading this property. Please try again.
           </p>
-          <Button
-            variant="secondary"
-            className="mt-4"
-            onClick={() => navigate('/properties')}
-          >
+          <Button variant="secondary" className="mt-4" onClick={() => navigate('/properties')}>
             Back to Properties
           </Button>
         </div>
@@ -83,17 +77,11 @@ export function PropertyDetailPage() {
           <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-surface-100">
             <HomeModernIcon className="h-8 w-8 text-surface-400" />
           </div>
-          <h2 className="mt-4 text-xl font-semibold text-surface-700">
-            Property not found
-          </h2>
+          <h2 className="mt-4 text-xl font-semibold text-surface-700">Property not found</h2>
           <p className="mt-2 text-sm text-surface-500 max-w-sm mx-auto">
             The property you&apos;re looking for doesn&apos;t exist or has been removed.
           </p>
-          <Button
-            variant="secondary"
-            className="mt-4"
-            onClick={() => navigate('/properties')}
-          >
+          <Button variant="secondary" className="mt-4" onClick={() => navigate('/properties')}>
             Back to Properties
           </Button>
         </div>
@@ -150,16 +138,13 @@ export function PropertyDetailPage() {
       )}
 
       {/* Title */}
-      <h1 className="mt-6 text-2xl font-bold text-surface-900 sm:text-3xl">
-        {property.title}
-      </h1>
+      <h1 className="mt-6 text-2xl font-bold text-surface-900 sm:text-3xl">{property.title}</h1>
 
       {/* Property meta badges */}
       <div className="mt-4 flex flex-wrap gap-2">
         {property.price != null && (
           <Badge variant="success" size="md">
-            <CurrencyDollarIcon className="h-3.5 w-3.5" />
-            ${property.price.toLocaleString()}
+            <CurrencyDollarIcon className="h-3.5 w-3.5" />${property.price.toLocaleString()}
           </Badge>
         )}
         {property.bedrooms != null && (
@@ -205,18 +190,12 @@ export function PropertyDetailPage() {
       {/* Make Enquiry CTA */}
       <div className="mt-10 flex flex-col gap-4 rounded-2xl border border-surface-200 bg-surface-50 p-6 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <p className="text-base font-semibold text-surface-900">
-            Interested in this property?
-          </p>
+          <p className="text-base font-semibold text-surface-900">Interested in this property?</p>
           <p className="mt-1 text-sm text-surface-500">
             Send an enquiry and our team will get back to you.
           </p>
         </div>
-        <Button
-          size="lg"
-          onClick={handleMakeEnquiry}
-          icon={<EnvelopeIcon className="h-5 w-5" />}
-        >
+        <Button size="lg" onClick={handleMakeEnquiry} icon={<EnvelopeIcon className="h-5 w-5" />}>
           Make Enquiry
         </Button>
       </div>

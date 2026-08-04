@@ -68,9 +68,7 @@ export function GdprToolsPage() {
     <div className="space-y-6 max-w-4xl">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-surface-900 sm:text-display-xs">
-          GDPR Tools
-        </h1>
+        <h1 className="text-2xl font-bold text-surface-900 sm:text-display-xs">GDPR Tools</h1>
         <p className="mt-1 text-sm text-surface-500">
           Export or erase personal data associated with an email address.
         </p>
@@ -86,7 +84,8 @@ export function GdprToolsPage() {
         <div>
           <p className="text-sm font-medium text-brand-800">GDPR Compliance</p>
           <p className="mt-0.5 text-sm text-brand-700">
-            This tool allows you to fulfill data subject access requests (DSAR) and right-to-erasure requests.
+            This tool allows you to fulfill data subject access requests (DSAR) and right-to-erasure
+            requests.
           </p>
         </div>
       </motion.div>
@@ -150,15 +149,12 @@ export function GdprToolsPage() {
             <ExclamationTriangleIcon className="h-5 w-5 shrink-0 text-red-600 mt-0.5" />
             <p className="text-sm text-red-700">
               Are you sure you want to permanently erase all data for{' '}
-              <span className="font-semibold">{email}</span>?
-              This includes all enquiries and associated records.
+              <span className="font-semibold">{email}</span>? This includes all enquiries and
+              associated records.
             </p>
           </div>
           <div className="flex gap-3 justify-end">
-            <Button
-              variant="secondary"
-              onClick={() => setShowEraseConfirm(false)}
-            >
+            <Button variant="secondary" onClick={() => setShowEraseConfirm(false)}>
               Cancel
             </Button>
             <Button
@@ -187,9 +183,7 @@ export function GdprToolsPage() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <DocumentTextIcon className="h-5 w-5 text-surface-400" />
-                    <h2 className="text-base font-semibold text-surface-900">
-                      Export Results
-                    </h2>
+                    <h2 className="text-base font-semibold text-surface-900">Export Results</h2>
                     <Badge variant="info" size="sm">
                       {exportedData.length} record{exportedData.length !== 1 ? 's' : ''}
                     </Badge>
@@ -211,10 +205,7 @@ export function GdprToolsPage() {
                   {exportedData.map((record, index) => (
                     <div key={index} className="px-5 py-4 sm:px-6">
                       <div className="flex items-center gap-2 mb-3">
-                        <Badge
-                          variant={record.type === 'enquiry' ? 'info' : 'purple'}
-                          size="sm"
-                        >
+                        <Badge variant={record.type === 'enquiry' ? 'info' : 'purple'} size="sm">
                           {record.type}
                         </Badge>
                       </div>

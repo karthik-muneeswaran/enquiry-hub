@@ -51,7 +51,13 @@ function RootRedirect() {
 /**
  * Wraps protected pages with the AppLayout (sidebar + mobile nav).
  */
-function ProtectedLayout({ children, permission }: { children: React.ReactNode; permission: Permission }) {
+function ProtectedLayout({
+  children,
+  permission,
+}: {
+  children: React.ReactNode;
+  permission: Permission;
+}) {
   return (
     <ProtectedRoute permission={permission}>
       <AppLayout>{children}</AppLayout>

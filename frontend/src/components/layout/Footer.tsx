@@ -16,8 +16,8 @@ export function Footer() {
               </span>
             </div>
             <p className="mt-4 max-w-sm text-sm text-surface-500 leading-relaxed">
-              A modern property enquiry management platform. Streamline communications,
-              track leads, and grow your real estate business.
+              A modern property enquiry management platform. Streamline communications, track leads,
+              and grow your real estate business.
             </p>
           </div>
 

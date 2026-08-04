@@ -65,9 +65,7 @@ export function MobileNav() {
   const isAdmin = hasRole(UserRole.ADMIN);
   const [moreOpen, setMoreOpen] = useState(false);
 
-  const visibleItems = mainNavItems.filter(
-    (item) => !item.adminOnly || isAdmin,
-  );
+  const visibleItems = mainNavItems.filter((item) => !item.adminOnly || isAdmin);
 
   return (
     <>
@@ -119,10 +117,7 @@ export function MobileNav() {
 
       {/* Backdrop */}
       {moreOpen && (
-        <div
-          className="fixed inset-0 z-30 bg-black/20"
-          onClick={() => setMoreOpen(false)}
-        />
+        <div className="fixed inset-0 z-30 bg-black/20" onClick={() => setMoreOpen(false)} />
       )}
 
       {/* Bottom nav bar */}
@@ -165,10 +160,7 @@ export function MobileNav() {
             className="flex flex-col items-center gap-1 px-3 py-1"
           >
             <span
-              className={cn(
-                'transition-colors',
-                moreOpen ? 'text-brand-600' : 'text-surface-400',
-              )}
+              className={cn('transition-colors', moreOpen ? 'text-brand-600' : 'text-surface-400')}
             >
               <EllipsisHorizontalIcon className="h-6 w-6" />
             </span>

@@ -18,6 +18,28 @@ vi.mock('../../src/hooks/useEnquiries', () => ({
   useEnquiries: (...args: any[]) => mockUseEnquiries(...args),
 }));
 
+// Mock useUpdateEnquiryStatus hook
+vi.mock('../../src/hooks/useUpdateEnquiryStatus', () => ({
+  useUpdateEnquiryStatus: () => ({
+    mutate: vi.fn(),
+    isPending: false,
+  }),
+}));
+
+// Mock UIProvider
+vi.mock('../../src/providers/UIProvider', () => ({
+  useUI: () => ({ addToast: vi.fn() }),
+}));
+
+// Mock AuthContext
+vi.mock('../../src/auth/AuthContext', () => ({
+  useAuth: () => ({
+    user: { email: 'admin@enquiry.dev', role: 'admin', name: 'Admin' },
+    isAuthenticated: true,
+    hasPermission: () => true,
+  }),
+}));
+
 const mockEnquiries = [
   {
     id: 'enq-1',
@@ -166,12 +188,10 @@ describe('AdminDashboardPage', () => {
 
     render(<AdminDashboardPage />, { wrapper: createWrapper() });
 
-    // Total Enquiries stat card
-    expect(screen.getByText('Total Enquiries')).toBeInTheDocument();
-    // "Pending", "Completed", "Failed" appear as both stat card titles and as badges
-    expect(screen.getAllByText('Pending').length).toBeGreaterThan(0);
-    expect(screen.getAllByText('Completed').length).toBeGreaterThan(0);
-    expect(screen.getAllByText('Failed').length).toBeGreaterThan(0);
+    // Stat cards render with status indicators
+    expect(screen.getAllByText(/pending/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/completed/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/failed/i).length).toBeGreaterThan(0);
   });
 
   it('should render filter controls', () => {

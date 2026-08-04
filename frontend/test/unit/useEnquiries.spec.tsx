@@ -104,7 +104,7 @@ describe('useEnquiries', () => {
     const { result, rerender } = renderHook(
       ({ params }: { params: ListEnquiriesParams }) => useEnquiries(params),
       {
-        initialProps: { params: { limit: 10, sortDir: 'desc' as const } },
+        initialProps: { params: { limit: 10, sortDir: 'desc' } as ListEnquiriesParams },
         wrapper: createWrapper(),
       },
     );

@@ -20,9 +20,18 @@ import {
 
 type EnquiryStatus = 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED' | 'ARCHIVED';
 
-const STATUS_OPTIONS: EnquiryStatus[] = ['PENDING', 'PROCESSING', 'COMPLETED', 'FAILED', 'ARCHIVED'];
+const STATUS_OPTIONS: EnquiryStatus[] = [
+  'PENDING',
+  'PROCESSING',
+  'COMPLETED',
+  'FAILED',
+  'ARCHIVED',
+];
 
-const STATUS_BADGE_MAP: Record<EnquiryStatus, { variant: 'warning' | 'info' | 'success' | 'danger' | 'default'; label: string }> = {
+const STATUS_BADGE_MAP: Record<
+  EnquiryStatus,
+  { variant: 'warning' | 'info' | 'success' | 'danger' | 'default'; label: string }
+> = {
   PENDING: { variant: 'warning', label: 'Pending' },
   PROCESSING: { variant: 'info', label: 'Processing' },
   COMPLETED: { variant: 'success', label: 'Completed' },
@@ -44,15 +53,18 @@ export function AdminDashboardPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
 
-  const params: ListEnquiriesParams = useMemo(() => ({
-    cursor: searchParams.get('cursor') || undefined,
-    limit: 20,
-    status: searchParams.get('status') || undefined,
-    dateFrom: searchParams.get('dateFrom') || undefined,
-    dateTo: searchParams.get('dateTo') || undefined,
-    search: searchParams.get('search') || undefined,
-    sortDir: (searchParams.get('sortDir') as 'asc' | 'desc') || 'desc',
-  }), [searchParams]);
+  const params: ListEnquiriesParams = useMemo(
+    () => ({
+      cursor: searchParams.get('cursor') || undefined,
+      limit: 20,
+      status: searchParams.get('status') || undefined,
+      dateFrom: searchParams.get('dateFrom') || undefined,
+      dateTo: searchParams.get('dateTo') || undefined,
+      search: searchParams.get('search') || undefined,
+      sortDir: (searchParams.get('sortDir') as 'asc' | 'desc') || 'desc',
+    }),
+    [searchParams],
+  );
 
   const { data, isLoading, isError, isFetching } = useEnquiries(params);
   const updateStatusMutation = useUpdateEnquiryStatus();
@@ -100,12 +112,8 @@ export function AdminDashboardPage() {
       {/* Page header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-surface-900 sm:text-display-xs">
-            Enquiries
-          </h1>
-          <p className="mt-1 text-sm text-surface-500">
-            Manage and review property enquiries
-          </p>
+          <h1 className="text-2xl font-bold text-surface-900 sm:text-display-xs">Enquiries</h1>
+          <p className="mt-1 text-sm text-surface-500">Manage and review property enquiries</p>
         </div>
         <div className="flex items-center gap-2">
           <span
@@ -198,19 +206,13 @@ export function AdminDashboardPage() {
         ) : isError ? (
           <div className="p-8 text-center">
             <XCircleIcon className="mx-auto h-10 w-10 text-red-300" />
-            <p className="mt-2 text-sm text-red-600">
-              Failed to load enquiries. Please try again.
-            </p>
+            <p className="mt-2 text-sm text-red-600">Failed to load enquiries. Please try again.</p>
           </div>
         ) : enquiries.length === 0 ? (
           <div className="p-12 text-center">
             <InboxIcon className="mx-auto h-12 w-12 text-surface-300" />
-            <p className="mt-3 text-sm font-medium text-surface-600">
-              No enquiries found
-            </p>
-            <p className="mt-1 text-xs text-surface-400">
-              Try adjusting your filters
-            </p>
+            <p className="mt-3 text-sm font-medium text-surface-600">No enquiries found</p>
+            <p className="mt-1 text-xs text-surface-400">Try adjusting your filters</p>
           </div>
         ) : (
           <>
@@ -238,7 +240,8 @@ export function AdminDashboardPage() {
                 </thead>
                 <tbody className="divide-y divide-surface-100">
                   {enquiries.map((enquiry) => {
-                    const statusInfo = STATUS_BADGE_MAP[enquiry.status as EnquiryStatus] || STATUS_BADGE_MAP.PENDING;
+                    const statusInfo =
+                      STATUS_BADGE_MAP[enquiry.status as EnquiryStatus] || STATUS_BADGE_MAP.PENDING;
                     return (
                       <tr
                         key={enquiry.id}
@@ -253,7 +256,10 @@ export function AdminDashboardPage() {
                         <td className="whitespace-nowrap px-6 py-4 text-sm text-surface-600">
                           {enquiry.email}
                         </td>
-                        <td className="max-w-[200px] truncate px-6 py-4 text-sm text-surface-600" title={enquiry.propertyTitle}>
+                        <td
+                          className="max-w-[200px] truncate px-6 py-4 text-sm text-surface-600"
+                          title={enquiry.propertyTitle}
+                        >
                           {enquiry.propertyTitle}
                         </td>
                         <td className="whitespace-nowrap px-6 py-4">
@@ -303,7 +309,8 @@ export function AdminDashboardPage() {
             {/* Mobile card list */}
             <div className="divide-y divide-surface-100 lg:hidden">
               {enquiries.map((enquiry) => {
-                const statusInfo = STATUS_BADGE_MAP[enquiry.status as EnquiryStatus] || STATUS_BADGE_MAP.PENDING;
+                const statusInfo =
+                  STATUS_BADGE_MAP[enquiry.status as EnquiryStatus] || STATUS_BADGE_MAP.PENDING;
                 return (
                   <button
                     key={enquiry.id}
@@ -316,9 +323,7 @@ export function AdminDashboardPage() {
                         <p className="text-sm font-medium text-surface-900 truncate">
                           {enquiry.name}
                         </p>
-                        <p className="mt-0.5 text-xs text-surface-500 truncate">
-                          {enquiry.email}
-                        </p>
+                        <p className="mt-0.5 text-xs text-surface-500 truncate">{enquiry.email}</p>
                         <p className="mt-1 text-xs text-surface-400 truncate">
                           {enquiry.propertyTitle}
                         </p>
@@ -365,9 +370,7 @@ export function AdminDashboardPage() {
         {pagination && (
           <div className="flex items-center justify-between border-t border-surface-100 px-4 py-3 sm:px-6">
             <div className="text-sm text-surface-500">
-              {pagination.totalCount != null && (
-                <span>{pagination.totalCount} total</span>
-              )}
+              {pagination.totalCount != null && <span>{pagination.totalCount} total</span>}
             </div>
             <div className="flex gap-2">
               <Button

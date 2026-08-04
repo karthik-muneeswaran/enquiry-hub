@@ -29,9 +29,7 @@ export interface ListWebhookEventsParams {
 }
 
 export const webhookApi = {
-  listEvents(
-    params: ListWebhookEventsParams,
-  ): Promise<PaginatedResponse<WebhookEvent>> {
+  listEvents(params: ListWebhookEventsParams): Promise<PaginatedResponse<WebhookEvent>> {
     return apiClient.get<PaginatedResponse<WebhookEvent>>('/webhook/events', {
       params,
     });

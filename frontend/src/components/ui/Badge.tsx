@@ -53,10 +53,7 @@ export function Badge({
       {...props}
     >
       {dot && (
-        <span
-          className={cn('h-1.5 w-1.5 rounded-full', dotColors[variant])}
-          aria-hidden="true"
-        />
+        <span className={cn('h-1.5 w-1.5 rounded-full', dotColors[variant])} aria-hidden="true" />
       )}
       {children}
     </span>

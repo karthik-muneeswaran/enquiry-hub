@@ -112,14 +112,16 @@ export function MetricsDashboardPage() {
     refetchInterval: 15000,
   });
 
-  const queues = (queueStatsResponse as any)?.data?.queues ?? (queueStatsResponse as any)?.queues ?? [];
+  const queues = queueStatsResponse?.queues ?? [];
 
   // Calculate aggregate stats from queues
   const totalCompleted = queues.reduce((sum: number, q: QueueStat) => sum + q.completed, 0);
   const totalFailed = queues.reduce((sum: number, q: QueueStat) => sum + q.failed, 0);
   const totalWaiting = queues.reduce((sum: number, q: QueueStat) => sum + q.waiting, 0);
   const totalActive = queues.reduce((sum: number, q: QueueStat) => sum + q.active, 0);
-  const totalEnquiries = recentEnquiriesData?.pagination?.totalCount ?? totalCompleted + totalFailed + totalWaiting + totalActive;
+  const totalEnquiries =
+    recentEnquiriesData?.pagination?.totalCount ??
+    totalCompleted + totalFailed + totalWaiting + totalActive;
 
   // Real-time status distribution from API
   const pendingCount = pendingData?.pagination?.totalCount ?? 0;
@@ -128,26 +130,45 @@ export function MetricsDashboardPage() {
   const failedCount = failedData?.pagination?.totalCount ?? 0;
   const totalStatusCount = pendingCount + processingCount + completedCount + failedCount;
 
-  const statusDistributionData = totalStatusCount > 0
-    ? [
-        { name: 'Completed', value: Math.round((completedCount / totalStatusCount) * 100), color: STATUS_COLORS.Completed },
-        { name: 'Processing', value: Math.round((processingCount / totalStatusCount) * 100), color: STATUS_COLORS.Processing },
-        { name: 'Pending', value: Math.round((pendingCount / totalStatusCount) * 100), color: STATUS_COLORS.Pending },
-        { name: 'Failed', value: Math.round((failedCount / totalStatusCount) * 100), color: STATUS_COLORS.Failed },
-      ]
-    : [
-        { name: 'Completed', value: 65, color: STATUS_COLORS.Completed },
-        { name: 'Processing', value: 15, color: STATUS_COLORS.Processing },
-        { name: 'Pending', value: 12, color: STATUS_COLORS.Pending },
-        { name: 'Failed', value: 8, color: STATUS_COLORS.Failed },
-      ];
+  const statusDistributionData =
+    totalStatusCount > 0
+      ? [
+          {
+            name: 'Completed',
+            value: Math.round((completedCount / totalStatusCount) * 100),
+            color: STATUS_COLORS.Completed,
+          },
+          {
+            name: 'Processing',
+            value: Math.round((processingCount / totalStatusCount) * 100),
+            color: STATUS_COLORS.Processing,
+          },
+          {
+            name: 'Pending',
+            value: Math.round((pendingCount / totalStatusCount) * 100),
+            color: STATUS_COLORS.Pending,
+          },
+          {
+            name: 'Failed',
+            value: Math.round((failedCount / totalStatusCount) * 100),
+            color: STATUS_COLORS.Failed,
+          },
+        ]
+      : [
+          { name: 'Completed', value: 65, color: STATUS_COLORS.Completed },
+          { name: 'Processing', value: 15, color: STATUS_COLORS.Processing },
+          { name: 'Pending', value: 12, color: STATUS_COLORS.Pending },
+          { name: 'Failed', value: 8, color: STATUS_COLORS.Failed },
+        ];
 
   // Build volume chart from real enquiry data grouped by day
   const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
   const recentEnquiries = recentEnquiriesData?.data ?? [];
 
   const volumeByDay: Record<string, { enquiries: number; completed: number }> = {};
-  dayNames.forEach((d) => { volumeByDay[d] = { enquiries: 0, completed: 0 }; });
+  dayNames.forEach((d) => {
+    volumeByDay[d] = { enquiries: 0, completed: 0 };
+  });
 
   recentEnquiries.forEach((eq: { createdAt: string; status: string }) => {
     const day = dayNames[new Date(eq.createdAt).getDay()];
@@ -185,9 +206,7 @@ export function MetricsDashboardPage() {
       {/* Page header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-surface-900 sm:text-display-xs">
-            Dashboard
-          </h1>
+          <h1 className="text-2xl font-bold text-surface-900 sm:text-display-xs">Dashboard</h1>
           <p className="mt-1 text-sm text-surface-500">
             Real-time platform performance and business insights.
           </p>
@@ -251,7 +270,11 @@ export function MetricsDashboardPage() {
             title="Failed"
             value={failedCount.toLocaleString()}
             icon={<ExclamationTriangleIcon className="h-6 w-6" />}
-            trend={{ value: failedCount, label: failedCount > 0 ? 'needs attention' : 'all clear', positive: failedCount === 0 }}
+            trend={{
+              value: failedCount,
+              label: failedCount > 0 ? 'needs attention' : 'all clear',
+              positive: failedCount === 0,
+            }}
             className="h-full"
           />
         </motion.div>
@@ -270,12 +293,8 @@ export function MetricsDashboardPage() {
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="text-base font-semibold text-surface-900">
-                    Enquiry Volume
-                  </h3>
-                  <p className="text-sm text-surface-500">
-                    Daily submissions vs completions
-                  </p>
+                  <h3 className="text-base font-semibold text-surface-900">Enquiry Volume</h3>
+                  <p className="text-sm text-surface-500">Daily submissions vs completions</p>
                 </div>
                 <Badge variant="success" dot>
                   Live
@@ -347,9 +366,7 @@ export function MetricsDashboardPage() {
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="text-base font-semibold text-surface-900">
-                    Status Distribution
-                  </h3>
+                  <h3 className="text-base font-semibold text-surface-900">Status Distribution</h3>
                   <p className="text-sm text-surface-500">Current enquiry states</p>
                 </div>
                 <Badge variant="success" dot>
@@ -412,9 +429,7 @@ export function MetricsDashboardPage() {
               <div className="flex items-center gap-2">
                 <DocumentTextIcon className="h-5 w-5 text-surface-400" />
                 <div>
-                  <h3 className="text-base font-semibold text-surface-900">
-                    Recent Activity
-                  </h3>
+                  <h3 className="text-base font-semibold text-surface-900">Recent Activity</h3>
                   <p className="text-sm text-surface-500">Latest audit log entries</p>
                 </div>
               </div>
@@ -436,75 +451,73 @@ export function MetricsDashboardPage() {
               {auditLogs.map((log) => {
                 const before = log.before as Record<string, unknown> | null;
                 const after = log.after as Record<string, unknown> | null;
-                const propertyTitle = (after?.propertyTitle || before?.propertyTitle || '') as string;
+                const propertyTitle = (after?.propertyTitle ||
+                  before?.propertyTitle ||
+                  '') as string;
                 const enquiryName = (after?.name || before?.name || '') as string;
                 const statusBefore = (before?.status || '') as string;
                 const statusAfter = (after?.status || '') as string;
 
                 return (
-                <div
-                  key={log.id}
-                  className="flex items-start gap-4 px-5 py-4 sm:px-6 hover:bg-surface-50 transition-colors"
-                >
-                  {/* Action icon */}
                   <div
-                    className={cn(
-                      'flex h-9 w-9 shrink-0 items-center justify-center rounded-xl',
-                      log.action === 'CREATE' && 'bg-green-50 text-green-600',
-                      log.action === 'UPDATE' && 'bg-blue-50 text-blue-600',
-                      log.action === 'DELETE' && 'bg-red-50 text-red-600',
-                    )}
+                    key={log.id}
+                    className="flex items-start gap-4 px-5 py-4 sm:px-6 hover:bg-surface-50 transition-colors"
                   >
-                    {ACTION_ICONS[log.action]}
-                  </div>
-
-                  {/* Content */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <Badge variant={ACTION_BADGE_VARIANT[log.action]} size="sm">
-                        {log.action}
-                      </Badge>
-                      <span className="text-sm font-medium text-surface-900">
-                        {log.entity}
-                      </span>
-                      {enquiryName && (
-                        <span className="text-sm text-surface-700">
-                          &mdash; {enquiryName}
-                        </span>
+                    {/* Action icon */}
+                    <div
+                      className={cn(
+                        'flex h-9 w-9 shrink-0 items-center justify-center rounded-xl',
+                        log.action === 'CREATE' && 'bg-green-50 text-green-600',
+                        log.action === 'UPDATE' && 'bg-blue-50 text-blue-600',
+                        log.action === 'DELETE' && 'bg-red-50 text-red-600',
                       )}
+                    >
+                      {ACTION_ICONS[log.action]}
                     </div>
-                    {/* Status change detail */}
-                    {log.action === 'UPDATE' && statusBefore && statusAfter && (
-                      <div className="mt-1 flex items-center gap-1.5 text-xs">
-                        <span className="rounded bg-surface-100 px-1.5 py-0.5 font-medium text-surface-600">
-                          {statusBefore}
-                        </span>
-                        <span className="text-surface-400">&rarr;</span>
-                        <span className="rounded bg-brand-50 px-1.5 py-0.5 font-medium text-brand-700">
-                          {statusAfter}
+
+                    {/* Content */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <Badge variant={ACTION_BADGE_VARIANT[log.action]} size="sm">
+                          {log.action}
+                        </Badge>
+                        <span className="text-sm font-medium text-surface-900">{log.entity}</span>
+                        {enquiryName && (
+                          <span className="text-sm text-surface-700">&mdash; {enquiryName}</span>
+                        )}
+                      </div>
+                      {/* Status change detail */}
+                      {log.action === 'UPDATE' && statusBefore && statusAfter && (
+                        <div className="mt-1 flex items-center gap-1.5 text-xs">
+                          <span className="rounded bg-surface-100 px-1.5 py-0.5 font-medium text-surface-600">
+                            {statusBefore}
+                          </span>
+                          <span className="text-surface-400">&rarr;</span>
+                          <span className="rounded bg-brand-50 px-1.5 py-0.5 font-medium text-brand-700">
+                            {statusAfter}
+                          </span>
+                        </div>
+                      )}
+                      {/* Property info */}
+                      {propertyTitle && (
+                        <p className="mt-0.5 text-xs text-surface-400 truncate">
+                          Property: {propertyTitle}
+                        </p>
+                      )}
+                      <div className="mt-1 flex items-center gap-3 text-xs text-surface-500">
+                        <span>by {log.performedBy || 'system'}</span>
+                        <span>&middot;</span>
+                        <span>
+                          {new Date(log.createdAt).toLocaleString('en-AU', {
+                            month: 'short',
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })}
                         </span>
                       </div>
-                    )}
-                    {/* Property info */}
-                    {propertyTitle && (
-                      <p className="mt-0.5 text-xs text-surface-400 truncate">
-                        Property: {propertyTitle}
-                      </p>
-                    )}
-                    <div className="mt-1 flex items-center gap-3 text-xs text-surface-500">
-                      <span>by {log.performedBy || 'system'}</span>
-                      <span>&middot;</span>
-                      <span>
-                        {new Date(log.createdAt).toLocaleString('en-AU', {
-                          month: 'short',
-                          day: 'numeric',
-                          hour: '2-digit',
-                          minute: '2-digit',
-                        })}
-                      </span>
                     </div>
                   </div>
-                </div>
                 );
               })}
             </div>

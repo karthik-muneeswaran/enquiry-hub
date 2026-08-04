@@ -33,11 +33,11 @@ export function OfflineBanner() {
       setPendingCount(offlineQueue.getPendingCount());
 
       if (successCount > 0 && failCount === 0) {
-        setFlushMessage(`${successCount} pending submission${successCount > 1 ? 's' : ''} sent successfully.`);
-      } else if (successCount > 0 && failCount > 0) {
         setFlushMessage(
-          `${successCount} sent, ${failCount} failed and will retry later.`,
+          `${successCount} pending submission${successCount > 1 ? 's' : ''} sent successfully.`,
         );
+      } else if (successCount > 0 && failCount > 0) {
+        setFlushMessage(`${successCount} sent, ${failCount} failed and will retry later.`);
       }
 
       // Clear the flush message after 5 seconds

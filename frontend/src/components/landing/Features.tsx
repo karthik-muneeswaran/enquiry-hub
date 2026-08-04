@@ -105,17 +105,11 @@ export function Features() {
               variants={cardVariants}
               className="group relative rounded-2xl border border-surface-200 bg-white p-6 shadow-card transition-all duration-300 hover:shadow-card-hover hover:-translate-y-1"
             >
-              <div
-                className={`inline-flex rounded-xl border p-3 ${feature.color}`}
-              >
+              <div className={`inline-flex rounded-xl border p-3 ${feature.color}`}>
                 {feature.icon}
               </div>
-              <h3 className="mt-4 text-lg font-semibold text-surface-900">
-                {feature.title}
-              </h3>
-              <p className="mt-2 text-sm text-surface-600 leading-relaxed">
-                {feature.description}
-              </p>
+              <h3 className="mt-4 text-lg font-semibold text-surface-900">{feature.title}</h3>
+              <p className="mt-2 text-sm text-surface-600 leading-relaxed">{feature.description}</p>
             </motion.div>
           ))}
         </motion.div>
