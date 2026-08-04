@@ -82,32 +82,40 @@ jobs:
           path: frontend/junit-report.xml
           retention-days: 14
 
-  # Gate 3: Production Build + Bundle Analysis + Trivy
+  # Gate 3: Docker Build + Bundle Analysis + Trivy
   build-and-scan:
     name: Build & Security Scan
     runs-on: ubuntu-latest
     needs: component-tests
-    defaults:
-      run:
-        working-directory: ${{ env.WORKING_DIR }}
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build frontend Docker image
+        uses: docker/build-push-action@v5
         with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-          cache-dependency-path: frontend/package-lock.json
+          context: ./frontend
+          push: false
+          load: true
+          tags: enquiry-frontend:${{ github.sha }}
+          build-args: |
+            VITE_API_BASE_URL=https://enquiry-hub-backend.karthikmuneeswaran.com/api/v1
+            VITE_GRAPHQL_URL=https://enquiry-hub-backend.karthikmuneeswaran.com/graphql
+            VITE_ADMIN_API_KEY=build-test-key
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
-      - run: npm ci
-
-      - name: Production build
-        run: npm run build
+      - name: Extract dist for bundle analysis
+        run: |
+          docker create --name fe-extract enquiry-frontend:${{ github.sha }}
+          docker cp fe-extract:/usr/share/nginx/html ./dist
+          docker rm fe-extract
 
       - name: Bundle size analysis
         run: |
           echo "=== Bundle Size Analysis ==="
-          # Calculate total JS size (gzipped)
           TOTAL_JS_SIZE=0
           LARGEST_CHUNK=0
 
@@ -129,7 +137,6 @@ jobs:
           echo ""
           echo "Total JS (gzipped): ${TOTAL_KB}KB"
           echo "Largest chunk (gzipped): ${LARGEST_KB}KB"
-          echo ""
 
           # Budget: total JS < 500KB gzipped
           MAX_TOTAL=$((500 * 1024))
@@ -147,15 +154,14 @@ jobs:
 
           echo "Bundle size within budget."
 
-      - name: Run Trivy filesystem scan
+      - name: Trivy vulnerability scan
         uses: aquasecurity/trivy-action@master
         with:
-          scan-type: 'fs'
-          scan-ref: 'frontend/'
-          severity: 'CRITICAL,HIGH'
-          exit-code: '1'
+          image-ref: enquiry-frontend:${{ github.sha }}
           format: 'sarif'
           output: 'trivy-results.sarif'
+          severity: 'CRITICAL,HIGH'
+          exit-code: '1'
 
       - name: Upload Trivy results
         if: always()
@@ -164,33 +170,17 @@ jobs:
           sarif_file: trivy-results.sarif
         continue-on-error: true
 
-      - name: Upload build artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: frontend-dist
-          path: frontend/dist/
-          retention-days: 7
-
   # Gate 4: Deploy + Smoke (main branch only)
   deploy:
-    name: Deploy Static Assets
+    name: Deploy to Production
     runs-on: ubuntu-latest
     needs: [build-and-scan]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     environment: production
-    defaults:
-      run:
-        working-directory: ${{ env.WORKING_DIR }}
     steps:
       - uses: actions/checkout@v4
 
-      - name: Download build artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: frontend-dist
-          path: frontend/dist/
-
-      - name: Save previous deployment reference
+      - name: Deploy frontend container via SSH
         uses: appleboy/ssh-action@v1
         with:
           host: ${{ secrets.VPS_HOST }}
@@ -198,47 +188,27 @@ jobs:
           key: ${{ secrets.VPS_SSH_KEY }}
           port: ${{ secrets.VPS_SSH_PORT }}
           script: |
-            cd /opt/property-platform
-            if [ -d "frontend-dist-current" ]; then
-              cp -r frontend-dist-current frontend-dist-previous
-            fi
+            cd /opt/enquiry-platform
+            git pull origin main
+            # Rebuild and restart only the frontend container
+            docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build --no-deps frontend
+            # Wait for container to be healthy
+            sleep 5
+            docker compose ps frontend | grep -q "Up" || exit 1
+            echo "Frontend deployed successfully"
 
-      - name: Deploy to VPS
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.VPS_HOST }}
-          username: ${{ secrets.VPS_USER }}
-          key: ${{ secrets.VPS_SSH_KEY }}
-          port: ${{ secrets.VPS_SSH_PORT }}
-          source: 'frontend/dist/*'
-          target: '/opt/property-platform/frontend-dist-current'
-          strip_components: 2
-
-      - name: Reload Nginx
-        uses: appleboy/ssh-action@v1
-        with:
-          host: ${{ secrets.VPS_HOST }}
-          username: ${{ secrets.VPS_USER }}
-          key: ${{ secrets.VPS_SSH_KEY }}
-          port: ${{ secrets.VPS_SSH_PORT }}
-          script: |
-            sudo nginx -t && sudo nginx -s reload
-
-  # Gate 4 (continued): Smoke Tests
+  # Gate 5: Smoke Tests
   smoke:
     name: Smoke Tests
     runs-on: ubuntu-latest
     needs: deploy
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    defaults:
-      run:
-        working-directory: ${{ env.WORKING_DIR }}
     steps:
       - uses: actions/checkout@v4
 
       - name: Run smoke tests
         env:
-          SMOKE_BASE_URL: ${{ secrets.PRODUCTION_URL }}
+          SMOKE_BASE_URL: https://enquiry-hub.karthikmuneeswaran.com
         run: |
           echo "=== Frontend Smoke Tests ==="
 
@@ -258,7 +228,7 @@ jobs:
           fi
           echo "PASS: Frontend contains DOCTYPE"
 
-          # Check 3: SPA routes resolve (return 200 via fallback)
+          # Check 3: SPA routes resolve
           HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "${SMOKE_BASE_URL}/properties")
           if [ "$HTTP_CODE" != "200" ]; then
             echo "FAIL: SPA route /properties returned $HTTP_CODE (expected 200)"
@@ -266,25 +236,12 @@ jobs:
           fi
           echo "PASS: SPA route /properties resolves"
 
-          # Check 4: Static assets are served with cache headers
-          ASSET_URL=$(curl -s "${SMOKE_BASE_URL}/" | grep -oP 'src="(/assets/[^"]+)"' | head -1 | cut -d'"' -f2)
-          if [ -n "$ASSET_URL" ]; then
-            CACHE_HEADER=$(curl -s -I "${SMOKE_BASE_URL}${ASSET_URL}" | grep -i "cache-control")
-            if echo "$CACHE_HEADER" | grep -qi "immutable"; then
-              echo "PASS: Static assets have immutable cache headers"
-            else
-              echo "WARN: Static assets missing immutable cache header"
-            fi
-          else
-            echo "SKIP: No asset URL found to verify caching"
-          fi
-
-          # Check 5: Security headers present
+          # Check 4: Security headers present
           HEADERS=$(curl -s -I "${SMOKE_BASE_URL}/")
-          if echo "$HEADERS" | grep -qi "x-content-type-options"; then
-            echo "PASS: X-Content-Type-Options header present"
+          if echo "$HEADERS" | grep -qi "strict-transport-security"; then
+            echo "PASS: HSTS header present"
           else
-            echo "WARN: X-Content-Type-Options header missing"
+            echo "WARN: HSTS header missing"
           fi
 
           echo ""
@@ -299,13 +256,8 @@ jobs:
           key: ${{ secrets.VPS_SSH_KEY }}
           port: ${{ secrets.VPS_SSH_PORT }}
           script: |
-            cd /opt/property-platform
-            if [ -d "frontend-dist-previous" ]; then
-              rm -rf frontend-dist-current
-              mv frontend-dist-previous frontend-dist-current
-              sudo nginx -t && sudo nginx -s reload
-              echo "Rollback completed successfully"
-            else
-              echo "ERROR: No previous deployment found for rollback"
-              exit 1
-            fi
+            cd /opt/enquiry-platform
+            echo "Smoke tests failed — rolling back frontend..."
+            git checkout HEAD~1 -- frontend/
+            docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build --no-deps frontend
+            echo "Rollback complete"

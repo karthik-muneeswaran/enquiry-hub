@@ -1,5 +1,3 @@
-version: "3.8"
-
 # Production overlay — use with: docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
 # All services run as containers. Docker Compose manages lifecycle.
 # PM2 runs INSIDE the backend container for Node.js cluster mode.
