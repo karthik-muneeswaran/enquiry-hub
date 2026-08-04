@@ -127,10 +127,8 @@ enquiry-backend-platform/
 │   └── test/                # Unit and E2E tests
 ├── nginx/                   # Nginx configuration
 ├── observability/           # Prometheus, Grafana, Loki, Tempo configs
-├── postman/                 # Postman collection and environment files
 ├── scripts/                 # Backup, restore, hardening, SSL scripts
 ├── docs/                    # Operational documentation
-├── SECURITY_REPORT.md       # Security assessment and threat analysis
 ├── docker-compose.yml       # Development orchestration
 └── docker-compose.prod.yml  # Production overlay
 ```
@@ -142,13 +140,10 @@ enquiry-backend-platform/
 | Document | Description |
 |----------|-------------|
 | [docs/API.md](docs/API.md) | API reference, Swagger UI links, endpoint overview |
-| [docs/DATABASE_SCHEMA.md](docs/DATABASE_SCHEMA.md) | Database schema, ERD, indexes, query patterns |
 | [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) | VPS setup, Docker deployment, SSL configuration |
 | [docs/ENVIRONMENT.md](docs/ENVIRONMENT.md) | Complete environment variable reference |
 | [docs/PERFORMANCE.md](docs/PERFORMANCE.md) | Performance optimizations and rationale |
 | [docs/RUNBOOK.md](docs/RUNBOOK.md) | Incident response, scaling, backup, rollback |
-| [SECURITY_REPORT.md](SECURITY_REPORT.md) | Vulnerability assessment, threat scenarios, OWASP analysis |
-| [postman/](postman/) | Postman collection and environment files |
 
 ---
 

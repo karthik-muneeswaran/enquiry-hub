@@ -62,7 +62,13 @@ cd enquiry-platform
 
 ### Backend Environment Variables
 
-Create `/opt/enquiry-platform/backend/.env.production`:
+Copy the production template to `.env` on the server:
+
+```bash
+cp backend/.env.prod backend/.env
+```
+
+Then edit `backend/.env` and replace all `CHANGE_ME` placeholders with real values:
 
 ```bash
 NODE_ENV=production
@@ -92,10 +98,10 @@ SMTP_PASS=<smtp-password>
 
 # External Services
 CRM_WEBHOOK_URL=https://your-crm.com/api/webhook
-WORDPRESS_GRAPHQL_URL=https://your-wordpress.com/graphql
+WORDPRESS_GRAPHQL_URL=http://wordpress:80/graphql
 
 # CORS
-CORS_ORIGINS=https://yourdomain.com
+CORS_ORIGINS=https://enquiry-hub.karthikmuneeswaran.com
 
 # Rate Limiting
 RATE_LIMIT_ENABLED=true
@@ -103,11 +109,17 @@ RATE_LIMIT_ENABLED=true
 
 ### Frontend Environment Variables
 
-Create `/opt/enquiry-platform/frontend/.env.production`:
+Copy the production template to `.env` on the server:
 
 ```bash
-VITE_API_BASE_URL=https://yourdomain.com/api/v1
-VITE_GRAPHQL_URL=https://yourdomain.com/graphql
+cp frontend/.env.prod frontend/.env
+```
+
+Then edit `frontend/.env`:
+
+```bash
+VITE_API_BASE_URL=https://enquiry-hub-backend.karthikmuneeswaran.com/api/v1
+VITE_GRAPHQL_URL=https://enquiry-hub-backend.karthikmuneeswaran.com/graphql
 ```
 
 ---
@@ -243,47 +255,6 @@ Backups are stored in `/backups/postgres/` with retention:
 ```bash
 ./scripts/restore.sh /backups/postgres/full_YYYYMMDD_HHMMSS.sql.gz
 ```
-
----
-
-## Logging Strategy
-
-The platform uses a structured, centralized logging approach:
-
-| Component | Method | Destination |
-|-----------|--------|-------------|
-| Backend (NestJS) | Pino JSON logger (`nestjs-pino`) | stdout → Docker → Promtail → Loki |
-| Nginx | Custom log format with request ID | `/var/log/nginx/access.log` → Promtail → Loki |
-| PostgreSQL | Docker container logs | stdout → Promtail → Loki |
-| Redis | Docker container logs | stdout → Promtail → Loki |
-
-### Log Levels
-
-| Environment | Level | Description |
-|-------------|-------|-------------|
-| Development | `debug` | Verbose output for local debugging |
-| Production | `info` | Balanced detail (no debug noise) |
-
-### Structured Log Fields
-
-Every application log entry includes:
-- `timestamp` — ISO 8601
-- `level` — fatal, error, warn, info, debug
-- `requestId` — correlation ID (matches `X-Request-Id` response header)
-- `method`, `url`, `statusCode` — HTTP context
-- `responseTime` — milliseconds
-- `service` — `enquiry-backend`
-
-### Centralized Viewing
-
-- **Grafana + Loki**: Query logs across all services at `http://grafana:3000/explore`
-- **Label filtering**: Filter by `container_name`, `level`, or grep by `requestId`
-- **Trace correlation**: Click from a log entry to its distributed trace in Tempo via `traceId`
-
-### Log Retention
-
-- Docker containers: managed by Docker's default json-file driver (100MB max, 3 rotated files)
-- Loki: 15 days retention (configurable in `observability/loki/loki-config.yml`)
 
 ---
 

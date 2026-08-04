@@ -94,13 +94,30 @@ All frontend environment variables are prefixed with `VITE_` (required by Vite f
 
 | File | Purpose | Committed to Git |
 |------|---------|-----------------|
-| `backend/.env.example` | Template with all variables documented | Yes |
-| `backend/.env.development` | Local development defaults (Docker Compose services) | Yes |
-| `backend/.env` | Local overrides (gitignored) | No |
-| `backend/.env.production` | Production secrets | No |
-| `frontend/.env.example` | Template with frontend variables | Yes |
-| `frontend/.env.development` | Local development defaults | Yes |
-| `frontend/.env.production` | Production frontend config | No |
+| `backend/.env.example` | Template with all variables (dev defaults) | Yes |
+| `backend/.env.prod` | Template with production values (placeholders only) | Yes |
+| `backend/.env` | Active env file used by Docker Compose (gitignored) | No |
+| `frontend/.env.example` | Template with frontend variables (dev defaults) | Yes |
+| `frontend/.env.prod` | Template with production frontend values | Yes |
+| `frontend/.env` | Active env file used by Docker Compose (gitignored) | No |
+
+### Strategy
+
+- Both local development and production use `.env` as the source file.
+- Docker Compose always reads from `backend/.env` and `frontend/.env`.
+- For **local development**: copy `.env.example` → `.env`
+- For **production deployment**: copy `.env.prod` → `.env` and fill in real secrets
+
+```bash
+# Local development
+cp backend/.env.example backend/.env
+cp frontend/.env.example frontend/.env
+
+# Production (on VPS)
+cp backend/.env.prod backend/.env
+cp frontend/.env.prod frontend/.env
+# Then edit and replace CHANGE_ME placeholders with real values
+```
 
 ---
 
@@ -128,7 +145,8 @@ ConfigModule.forRoot({
 
 ## Security Notes
 
-- Never commit `.env` or `.env.production` to version control
+- Never commit `.env` to version control (it contains real secrets)
+- `.env.prod` and `.env.example` are safe to commit (they only contain placeholders)
 - Use `openssl rand -hex 32` to generate secrets
 - Rotate API keys by adding new keys to `API_KEYS` before removing old ones (supports multiple simultaneous keys)
 - SMTP credentials should use app-specific passwords where possible

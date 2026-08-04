@@ -29,13 +29,24 @@ else
   echo "  User '$DEPLOY_USER' created and added to sudo group."
 fi
 
-# Set up SSH directory for deploy user
+# Enable passwordless sudo for deploy user
+echo "$DEPLOY_USER ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/$DEPLOY_USER
+chmod 440 /etc/sudoers.d/$DEPLOY_USER
+echo "  Passwordless sudo configured for $DEPLOY_USER."
+
+# Set up SSH directory for deploy user and copy root's authorized keys
 mkdir -p "/home/$DEPLOY_USER/.ssh"
 chmod 700 "/home/$DEPLOY_USER/.ssh"
-touch "/home/$DEPLOY_USER/.ssh/authorized_keys"
+if [ -f /root/.ssh/authorized_keys ]; then
+  cp /root/.ssh/authorized_keys "/home/$DEPLOY_USER/.ssh/authorized_keys"
+  echo "  Copied root's SSH keys to $DEPLOY_USER."
+else
+  touch "/home/$DEPLOY_USER/.ssh/authorized_keys"
+  echo "  WARNING: No root SSH keys found. Add your public key manually:"
+  echo "    /home/$DEPLOY_USER/.ssh/authorized_keys"
+fi
 chmod 600 "/home/$DEPLOY_USER/.ssh/authorized_keys"
 chown -R "$DEPLOY_USER:$DEPLOY_USER" "/home/$DEPLOY_USER/.ssh"
-echo "  SSH directory configured. Add your public key to /home/$DEPLOY_USER/.ssh/authorized_keys"
 
 # ─── 2. SSH Hardening ───
 echo "[2/7] Hardening SSH configuration (port $SSH_PORT, key-only, no root login)"
@@ -176,6 +187,14 @@ echo " IMPORTANT: Before disconnecting, verify SSH access:"
 echo "   ssh -p $SSH_PORT $DEPLOY_USER@<server-ip>"
 echo ""
 echo " Restarting SSH service..."
-systemctl restart sshd
+
+# Ubuntu 22.04+ uses 'ssh' service name, older uses 'sshd'
+if systemctl list-units --type=service | grep -q "ssh.service"; then
+  systemctl restart ssh
+elif systemctl list-units --type=service | grep -q "sshd.service"; then
+  systemctl restart sshd
+else
+  echo "  WARNING: Could not find SSH service. Restart it manually."
+fi
 
 echo " Done. SSH is now on port $SSH_PORT."

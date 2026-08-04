@@ -1,18 +1,7 @@
-# Environment files (actual values — never commit)
+# Environment files (actual secrets — never commit)
 .env
 backend/.env
 frontend/.env
-
-# Deprecated env files
-backend/.env.development
-backend/.env.production
-frontend/.env.development
-frontend/.env.production
-
-# Allow .env.example files (templates)
-!*.env.example
-!backend/.env.example
-!frontend/.env.example
 
 # Node
 node_modules/

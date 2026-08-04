@@ -6,8 +6,8 @@ dist/
 
 # Environment files (never commit secrets)
 .env
-.env.production
 .env.local
+.env.prod
 
 # IDE
 .idea/
