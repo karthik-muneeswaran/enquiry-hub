@@ -86,7 +86,7 @@ fi
 echo "  Repository ready at $PROJECT_DIR"
 
 # ─── 3. Generate Secrets ───
-echo "[3/5] Generating production secrets..."
+echo "[3/4] Generating production secrets..."
 
 HMAC_SECRET=$(openssl rand -hex 32)
 API_KEY=$(openssl rand -hex 16)
@@ -99,44 +99,8 @@ GRAFANA_PASSWORD=$(openssl rand -base64 12 | tr -d '/+=' | head -c 16)
 
 echo "  Secrets generated."
 
-# ─── 4. Create Backend .env ───
-echo "[4/5] Creating backend/.env..."
-
-cd "$PROJECT_DIR"
-
-if [ -f backend/.env ]; then
-  echo "  backend/.env already exists. Skipping (delete it first to regenerate)."
-else
-  cp backend/.env.prod backend/.env
-
-  # Replace placeholders with generated secrets
-  sed -i "s|CHANGE_ME_STRONG_PASSWORD|$DB_PASSWORD|g" backend/.env
-  sed -i "s|CHANGE_ME_WP_DB_PASSWORD|$WP_DB_PASSWORD|g" backend/.env
-  sed -i "s|CHANGE_ME_MYSQL_ROOT|$MYSQL_ROOT_PASSWORD|g" backend/.env
-  sed -i "s|CHANGE_ME_WP_ADMIN|$WP_ADMIN_PASSWORD|g" backend/.env
-  sed -i "s|CHANGE_ME_GRAFANA_PASS|$GRAFANA_PASSWORD|g" backend/.env
-  sed -i "s|CHANGE_ME_GENERATE_WITH_openssl_rand_hex_32|$HMAC_SECRET|g" backend/.env
-  sed -i "s|CHANGE_ME_GENERATE_WITH_openssl_rand_hex_16|$API_KEY|g" backend/.env
-  sed -i "s|CHANGE_ME_GENERATE_WITH_openssl_rand_hex_24|$ADMIN_API_KEY|g" backend/.env
-
-  echo "  backend/.env created with generated secrets."
-fi
-
-# ─── 5. Create Frontend .env ───
-echo "[5/5] Creating frontend/.env..."
-
-if [ -f frontend/.env ]; then
-  echo "  frontend/.env already exists. Skipping (delete it first to regenerate)."
-else
-  cp frontend/.env.prod frontend/.env
-
-  # Replace admin API key placeholder
-  sed -i "s|CHANGE_ME_SAME_AS_BACKEND_ADMIN_API_KEY|$ADMIN_API_KEY|g" frontend/.env
-
-  echo "  frontend/.env created."
-fi
-
-# ─── Summary ───
+# ─── 4. Print secrets ───
+echo "[4/4] Done!"
 echo ""
 echo "=========================================="
 echo " Project Setup Complete!"
@@ -144,21 +108,24 @@ echo "=========================================="
 echo ""
 echo " Project: $PROJECT_DIR"
 echo ""
-echo " Generated Credentials (SAVE THESE):"
+echo " Generated Credentials (use these in your .env files):"
 echo " ─────────────────────────────────────"
-echo "   DB Password:       $DB_PASSWORD"
-echo "   HMAC Secret:       $HMAC_SECRET"
-echo "   API Key:           $API_KEY"
-echo "   Admin API Key:     $ADMIN_API_KEY"
-echo "   WP DB Password:    $WP_DB_PASSWORD"
-echo "   MySQL Root Pass:   $MYSQL_ROOT_PASSWORD"
-echo "   WP Admin Password: $WP_ADMIN_PASSWORD"
-echo "   Grafana Password:  $GRAFANA_PASSWORD"
+echo "   DB_PASSWORD=$DB_PASSWORD"
+echo "   HMAC_SECRET=$HMAC_SECRET"
+echo "   API_KEY=$API_KEY"
+echo "   ADMIN_API_KEY=$ADMIN_API_KEY"
+echo "   WP_DB_PASSWORD=$WP_DB_PASSWORD"
+echo "   MYSQL_ROOT_PASSWORD=$MYSQL_ROOT_PASSWORD"
+echo "   WP_ADMIN_PASSWORD=$WP_ADMIN_PASSWORD"
+echo "   GRAFANA_PASSWORD=$GRAFANA_PASSWORD"
 echo " ─────────────────────────────────────"
 echo ""
-echo " NEXT: Review backend/.env for SMTP and CRM settings, then run:"
-echo "   cd $PROJECT_DIR"
-echo "   nano backend/.env   # Update SMTP_HOST, SMTP_PASS, CRM_WEBHOOK_URL"
-echo "   chmod +x scripts/deploy-production.sh"
-echo "   sudo ./scripts/deploy-production.sh"
+echo " NEXT:"
+echo "   1. Copy these values into your local backend/.env.prod"
+echo "   2. Paste the final .env content on the server:"
+echo "      cat > /opt/enquiry-platform/backend/.env << 'EOF'"
+echo "      <paste your .env content here>"
+echo "      EOF"
+echo "   3. Same for frontend/.env"
+echo "   4. Run: chmod +x scripts/deploy-production.sh && ./scripts/deploy-production.sh"
 echo ""

@@ -53,19 +53,9 @@ echo "  All checks passed."
 
 # --- Build Frontend (in container) ---
 echo "[2/8] Building frontend (containerized)..."
-docker run --rm \
-  -v "$PROJECT_DIR/frontend:/app" \
-  -w /app \
-  -e NODE_ENV=production \
-  --env-file "$PROJECT_DIR/frontend/.env" \
-  node:24-alpine \
-  sh -c "npm ci --silent && npm run build"
-
-if [ ! -f "$PROJECT_DIR/frontend/dist/index.html" ]; then
-  echo "  ERROR: Frontend build failed — dist/index.html not found."
-  exit 1
-fi
-echo "  Frontend built → frontend/dist/"
+# Frontend Dockerfile handles: npm ci → tsc → vite build → serve with nginx
+# No separate build step needed — docker compose --build does it all.
+echo "  Frontend will be built by Docker Compose (multi-stage Dockerfile)."
 
 # --- SSL Certificates ---
 echo "[3/8] Checking SSL certificates..."

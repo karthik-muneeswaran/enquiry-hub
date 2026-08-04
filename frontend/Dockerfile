@@ -12,8 +12,14 @@ CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
 
 # Stage 3: Build (production)
 FROM deps AS builder
+ARG VITE_API_BASE_URL
+ARG VITE_GRAPHQL_URL
+ARG VITE_ADMIN_API_KEY
+ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
+ENV VITE_GRAPHQL_URL=$VITE_GRAPHQL_URL
+ENV VITE_ADMIN_API_KEY=$VITE_ADMIN_API_KEY
 COPY . .
-RUN npm run build
+RUN ./node_modules/.bin/tsc && ./node_modules/.bin/vite build
 
 # Stage 4: Serve with Nginx (production)
 FROM nginx:alpine AS production

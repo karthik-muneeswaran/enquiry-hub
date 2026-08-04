@@ -1,8 +1,9 @@
 version: "3.8"
 
 # Production overlay — use with: docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
-# All services run as containers. No bare-metal services needed.
-# Env source: backend/.env and frontend/.env (copied from .env.prod on the server)
+# All services run as containers. Docker Compose manages lifecycle.
+# PM2 runs INSIDE the backend container for Node.js cluster mode.
+# Frontend builds itself via multi-stage Dockerfile (npm ci → tsc → vite build → nginx).
 
 services:
   backend:
@@ -11,9 +12,7 @@ services:
       dockerfile: Dockerfile
       target: production
     command: []
-    ports:
-      - "3000:3000"
-      - "8081:8081"
+    ports: []
     volumes: []
     env_file:
       - ./backend/.env
@@ -34,19 +33,31 @@ services:
     networks:
       - enquiry-hub-network
 
-  # Frontend is NOT a running service in production.
-  # Nginx serves the pre-built static files from ./frontend/dist
-  # We use a one-shot container to build frontend assets.
+  # Frontend: multi-stage build produces its own nginx container serving static files
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
       target: production
-    profiles:
-      - build-only
-    command: ["echo", "Frontend build complete"]
+      args:
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-https://enquiry-hub-backend.karthikmuneeswaran.com/api/v1}
+        VITE_GRAPHQL_URL: ${VITE_GRAPHQL_URL:-https://enquiry-hub-backend.karthikmuneeswaran.com/graphql}
+        VITE_ADMIN_API_KEY: ${VITE_ADMIN_API_KEY:-}
+    command: []
+    ports: []
     volumes: []
+    env_file:
+      - ./frontend/.env
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+          cpus: "0.5"
+    restart: unless-stopped
+    networks:
+      - enquiry-hub-network
 
+  # Main reverse proxy: SSL termination, routing to backend/frontend/grafana
   nginx:
     image: nginx:1.25-alpine
     ports:
@@ -55,11 +66,12 @@ services:
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./nginx/conf.d:/etc/nginx/conf.d:ro
-      - ./frontend/dist:/usr/share/nginx/html:ro
       - /etc/letsencrypt:/etc/letsencrypt:ro
       - /var/www/certbot:/var/www/certbot:ro
     depends_on:
       - backend
+      - frontend
+      - grafana
     deploy:
       resources:
         limits:
@@ -73,6 +85,7 @@ services:
     image: nginx/nginx-prometheus-exporter:1.1
     command:
       - "--nginx.scrape-uri=http://nginx:8080/stub_status"
+    ports: []
     depends_on:
       - nginx
     deploy:
@@ -84,7 +97,7 @@ services:
     networks:
       - enquiry-hub-network
 
-  # --- Database & Cache (no external ports in prod) ---
+  # --- Database & Cache (internal only) ---
   postgres:
     ports: []
     env_file:
@@ -110,7 +123,7 @@ services:
           memory: 64M
     restart: unless-stopped
 
-  # --- WordPress & MySQL (no external ports in prod) ---
+  # --- WordPress & MySQL (internal only) ---
   wordpress:
     ports: []
     env_file:
@@ -133,7 +146,7 @@ services:
           cpus: "1"
     restart: unless-stopped
 
-  # --- Exporters (no external ports in prod) ---
+  # --- Exporters (internal only) ---
   postgres-exporter:
     ports: []
     environment:
@@ -179,7 +192,7 @@ services:
           cpus: "0.25"
     restart: unless-stopped
 
-  # --- Observability (no external ports in prod — access via Grafana subdomain) ---
+  # --- Observability (internal only, accessed via Grafana subdomain) ---
   prometheus:
     ports: []
     deploy:
