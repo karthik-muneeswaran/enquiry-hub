@@ -113,7 +113,7 @@ describe('useEnquiries', () => {
       expect(result.current.isSuccess).toBe(true);
     });
 
-    rerender({ params: { limit: 10, sortDir: 'asc' as const } });
+    rerender({ params: { limit: 10, sortDir: 'asc' } as ListEnquiriesParams });
 
     await waitFor(() => {
       expect(mockList).toHaveBeenCalledTimes(2);

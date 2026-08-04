@@ -71,7 +71,7 @@ export function QueueDashboardPage() {
     onError: () => addToast('error', 'Failed to retry job'),
   });
 
-  const queues = (statsResponse as any)?.data?.queues ?? (statsResponse as any)?.queues ?? [];
+  const queues: Array<{ name: string; active: number; waiting: number; completed: number; failed: number; delayed: number; paused: boolean }> = (statsResponse as any)?.data?.queues ?? (statsResponse as any)?.queues ?? [];
   const dlqJobs: DeadLetterJob[] = (dlqResponse as any)?.data ?? dlqResponse ?? [];
 
   if (statsLoading) {

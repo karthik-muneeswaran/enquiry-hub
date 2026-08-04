@@ -40,14 +40,13 @@ export function GdprToolsPage() {
 
   const eraseMutation = useMutation({
     mutationFn: (targetEmail: string) => gdprApi.eraseData(targetEmail),
-    onSuccess: (response) => {
-      const result = response.data ?? response;
+    onSuccess: (result) => {
       setShowEraseConfirm(false);
       setExportedData(null);
       setEmail('');
       addToast(
         'success',
-        `Erased ${(result as any).erasedRecords} record(s) at ${new Date((result as any).erasedAt).toLocaleString()}.`,
+        `Erased ${result.erasedRecords} record(s) at ${new Date(result.erasedAt).toLocaleString()}.`,
       );
     },
     onError: () => {
