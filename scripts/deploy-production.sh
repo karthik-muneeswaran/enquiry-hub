@@ -15,6 +15,7 @@ set -euo pipefail
 
 DOMAIN_FRONTEND="enquiry-hub.karthikmuneeswaran.com"
 DOMAIN_BACKEND="enquiry-hub-backend.karthikmuneeswaran.com"
+DOMAIN_WP="enquiry-hub-wp.karthikmuneeswaran.com"
 DOMAIN_GRAFANA="enquiry-hub-grafana.karthikmuneeswaran.com"
 EMAIL="admin@karthikmuneeswaran.com"
 PROJECT_DIR="/opt/enquiry-platform"
@@ -25,6 +26,7 @@ echo "============================================"
 echo ""
 echo " Frontend: https://$DOMAIN_FRONTEND"
 echo " Backend:  https://$DOMAIN_BACKEND"
+echo " WordPress: https://$DOMAIN_WP"
 echo " Grafana:  https://$DOMAIN_GRAFANA"
 echo ""
 
@@ -61,7 +63,7 @@ echo "  Frontend will be built by Docker Compose (multi-stage Dockerfile)."
 echo "[3/8] Checking SSL certificates..."
 
 NEED_CERTS=false
-for DOMAIN in $DOMAIN_FRONTEND $DOMAIN_BACKEND $DOMAIN_GRAFANA; do
+for DOMAIN in $DOMAIN_FRONTEND $DOMAIN_BACKEND $DOMAIN_WP $DOMAIN_GRAFANA; do
   if [ ! -d "/etc/letsencrypt/live/$DOMAIN" ]; then
     NEED_CERTS=true
     break
@@ -80,18 +82,19 @@ if [ "$NEED_CERTS" = true ]; then
     sudo apt-get install -y -qq certbot
   fi
 
-  # Get certificates for all three subdomains
+  # Get certificates for all subdomains
   sudo certbot certonly --standalone \
     --non-interactive \
     --agree-tos \
     --email "$EMAIL" \
     -d "$DOMAIN_FRONTEND" \
     -d "$DOMAIN_BACKEND" \
+    -d "$DOMAIN_WP" \
     -d "$DOMAIN_GRAFANA"
 
   # Certbot may issue a single cert — create symlinks for each domain
   CERT_DIR=""
-  for DOMAIN in $DOMAIN_FRONTEND $DOMAIN_BACKEND $DOMAIN_GRAFANA; do
+  for DOMAIN in $DOMAIN_FRONTEND $DOMAIN_BACKEND $DOMAIN_WP $DOMAIN_GRAFANA; do
     if [ -d "/etc/letsencrypt/live/$DOMAIN" ]; then
       CERT_DIR="/etc/letsencrypt/live/$DOMAIN"
       break
@@ -99,7 +102,7 @@ if [ "$NEED_CERTS" = true ]; then
   done
 
   if [ -n "$CERT_DIR" ]; then
-    for DOMAIN in $DOMAIN_FRONTEND $DOMAIN_BACKEND $DOMAIN_GRAFANA; do
+    for DOMAIN in $DOMAIN_FRONTEND $DOMAIN_BACKEND $DOMAIN_WP $DOMAIN_GRAFANA; do
       if [ ! -d "/etc/letsencrypt/live/$DOMAIN" ]; then
         sudo ln -sf "$CERT_DIR" "/etc/letsencrypt/live/$DOMAIN"
         echo "  Linked cert for $DOMAIN"
@@ -170,11 +173,12 @@ echo " DEPLOYMENT SUCCESSFUL"
 echo "============================================"
 echo ""
 echo " Live URLs:"
-echo "   Frontend:  https://$DOMAIN_FRONTEND"
-echo "   Backend:   https://$DOMAIN_BACKEND/health/ready"
-echo "   GraphQL:   https://$DOMAIN_BACKEND/graphql"
-echo "   Grafana:   https://$DOMAIN_GRAFANA"
-echo "   Queues:    https://$DOMAIN_BACKEND/admin/queues"
+echo "   Frontend:   https://$DOMAIN_FRONTEND"
+echo "   Backend:    https://$DOMAIN_BACKEND/health/ready"
+echo "   GraphQL:    https://$DOMAIN_BACKEND/graphql"
+echo "   WordPress:  https://$DOMAIN_WP"
+echo "   Grafana:    https://$DOMAIN_GRAFANA"
+echo "   Queues:     https://$DOMAIN_BACKEND/admin/queues"
 echo ""
 echo " Containers:"
 docker compose -f docker-compose.yml -f docker-compose.prod.yml ps --format "table {{.Name}}\t{{.Status}}"
