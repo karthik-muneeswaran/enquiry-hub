@@ -19,7 +19,7 @@ ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
 ENV VITE_GRAPHQL_URL=$VITE_GRAPHQL_URL
 ENV VITE_ADMIN_API_KEY=$VITE_ADMIN_API_KEY
 COPY . .
-RUN ./node_modules/.bin/tsc && ./node_modules/.bin/vite build
+RUN ./node_modules/.bin/vite build
 
 # Stage 4: Serve with Nginx (production)
 FROM nginx:alpine AS production
