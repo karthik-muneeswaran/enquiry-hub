@@ -23,11 +23,11 @@ async function bootstrap() {
       contentSecurityPolicy: {
         directives: {
           defaultSrc: ["'self'"],
-          scriptSrc: ["'self'"],
-          styleSrc: ["'self'", "'unsafe-inline'"],
-          imgSrc: ["'self'", 'data:'],
+          scriptSrc: ["'self'", "'unsafe-inline'", 'https://cdn.jsdelivr.net'],
+          styleSrc: ["'self'", "'unsafe-inline'", 'https://cdn.jsdelivr.net'],
+          imgSrc: ["'self'", 'data:', 'https://cdn.jsdelivr.net'],
           connectSrc: ["'self'"],
-          fontSrc: ["'self'"],
+          fontSrc: ["'self'", 'https://cdn.jsdelivr.net'],
           objectSrc: ["'none'"],
           frameAncestors: ["'none'"],
         },
@@ -42,11 +42,35 @@ async function bootstrap() {
     }),
   );
 
+  // Swagger setup (must be before globalPrefix to avoid path conflicts)
+  const swaggerEnabled = configService.get<string>('SWAGGER_ENABLED', 'true') !== 'false';
+  if (swaggerEnabled) {
+    const swaggerConfig = new DocumentBuilder()
+      .setTitle('Enquiry Backend Platform')
+      .setDescription('API for managing property enquiries, CRM integrations, and notifications')
+      .setVersion('1.0.0')
+      .addApiKey({ type: 'apiKey', name: 'X-API-Key', in: 'header' }, 'api-key')
+      .addTag('Enquiry', 'Property enquiry CRUD operations')
+      .addTag('Webhook', 'CRM webhook ingestion')
+      .addTag('Property', 'WordPress property data (GraphQL)')
+      .addTag('GDPR', 'Data export and erasure')
+      .addTag('Health', 'Liveness and readiness probes')
+      .addTag('Admin', 'Queue management and dashboard')
+      .build();
+
+    const document = SwaggerModule.createDocument(app, swaggerConfig);
+    SwaggerModule.setup('api/docs', app, document, {
+      swaggerOptions: {
+        persistAuthorization: true,
+        tagsSorterAlpha: true,
+      },
+    });
+  }
+
   // Global prefix: all routes start with /api
   app.setGlobalPrefix('api', {
     exclude: [
       { path: 'health/(.*)', method: 0 }, // RequestMethod.GET = 0
-      { path: 'api/docs(.*)', method: 0 }, // Swagger UI
     ],
   });
 
@@ -82,31 +106,6 @@ async function bootstrap() {
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     credentials: true,
   });
-
-  // Swagger setup (conditional on environment)
-  const swaggerEnabled = configService.get<string>('SWAGGER_ENABLED', 'true') !== 'false';
-  if (swaggerEnabled) {
-    const config = new DocumentBuilder()
-      .setTitle('Enquiry Backend Platform')
-      .setDescription('API for managing property enquiries, CRM integrations, and notifications')
-      .setVersion('1.0.0')
-      .addApiKey({ type: 'apiKey', name: 'X-API-Key', in: 'header' }, 'api-key')
-      .addTag('Enquiry', 'Property enquiry CRUD operations')
-      .addTag('Webhook', 'CRM webhook ingestion')
-      .addTag('Property', 'WordPress property data (GraphQL)')
-      .addTag('GDPR', 'Data export and erasure')
-      .addTag('Health', 'Liveness and readiness probes')
-      .addTag('Admin', 'Queue management and dashboard')
-      .build();
-
-    const document = SwaggerModule.createDocument(app, config);
-    SwaggerModule.setup('api/docs', app, document, {
-      swaggerOptions: {
-        persistAuthorization: true,
-        tagsSorterAlpha: true,
-      },
-    });
-  }
 
   const port = configService.get<number>('PORT', 3000);
   await app.listen(port);
