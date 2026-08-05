@@ -40,7 +40,7 @@ services:
         VITE_GRAPHQL_URL: ${VITE_GRAPHQL_URL:-https://enquiry-hub-backend.karthikmuneeswaran.com/graphql}
     command: ["nginx", "-g", "daemon off;"]
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:80/"]
+      test: ["CMD-SHELL", "curl -sf http://localhost:80/ || wget -qO- http://localhost:80/ || exit 1"]
       interval: 30s
       timeout: 5s
       retries: 3
@@ -78,7 +78,7 @@ services:
           cpus: "0.5"
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:8080/stub_status"]
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/stub_status || curl -sf http://localhost:8080/stub_status || exit 1"]
       interval: 30s
       timeout: 5s
       retries: 3
