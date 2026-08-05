@@ -1,8 +1,6 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication, ValidationPipe, VersioningType } from '@nestjs/common';
+import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
-import { AppModule } from '@/app.module';
-import { SanitizationPipe } from '@common/pipes';
+import { createTestApp } from '../integration/setup/test-module.factory';
 
 /**
  * Regression: Race Condition Prevention
@@ -16,33 +14,12 @@ describe('Regression: Race Condition Prevention', () => {
   let app: INestApplication;
 
   beforeAll(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
-    }).compile();
-
-    app = moduleFixture.createNestApplication();
-    app.setGlobalPrefix('api', {
-      exclude: [{ path: 'health/(.*)', method: 0 }],
-    });
-    app.enableVersioning({
-      type: VersioningType.URI,
-      defaultVersion: '1',
-    });
-    app.useGlobalPipes(
-      new SanitizationPipe(),
-      new ValidationPipe({
-        whitelist: true,
-        forbidNonWhitelisted: true,
-        transform: true,
-        transformOptions: { enableImplicitConversion: true },
-      }),
-    );
-    await app.init();
-  });
+    ({ app } = await createTestApp());
+  }, 30000);
 
   afterAll(async () => {
     await app.close();
-  });
+  }, 30000);
 
   it('should create exactly 1 record when 10 concurrent identical requests are sent', async () => {
     const uniqueEmail = `race-${Date.now()}@example.com`;

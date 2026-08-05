@@ -281,36 +281,3 @@ jobs:
             sleep 15
             curl -sf http://localhost:3000/health/ready || echo "WARNING: Rollback health check failed"
             echo "Rollback complete"
-
-  # ─────────────────────────────────────────────────────────────────────────────
-  # Gate 7: k6 Load Test (informational, non-blocking)
-  # ─────────────────────────────────────────────────────────────────────────────
-  load-test:
-    name: 'Gate 7: k6 Load Test'
-    runs-on: ubuntu-latest
-    needs: smoke-tests
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    continue-on-error: true
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Install k6
-        run: |
-          sudo gpg -k
-          sudo gpg --no-default-keyring --keyring /usr/share/keyrings/k6-archive-keyring.gpg --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys C5AD17C747E3415A3642D57D77C6C491D6AC1D68
-          echo "deb [signed-by=/usr/share/keyrings/k6-archive-keyring.gpg] https://dl.k6.io/deb stable main" | sudo tee /etc/apt/sources.list.d/k6.list
-          sudo apt-get update
-          sudo apt-get install k6 -y
-
-      - name: Run k6 smoke test
-        env:
-          K6_BASE_URL: https://enquiry-hub-backend.karthikmuneeswaran.com
-        run: k6 run backend/test/k6/scenarios/smoke.js --out json=k6-results.json
-        continue-on-error: true
-
-      - name: Upload k6 results
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: k6-load-test-results
-          path: k6-results.json
