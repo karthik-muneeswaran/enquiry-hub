@@ -8,12 +8,9 @@
  * Requirements: 30.5
  */
 import axios, { AxiosInstance } from 'axios';
-import * as crypto from 'crypto';
 
 const BASE_URL = process.env.SMOKE_BASE_URL || 'http://localhost:3000';
 const FRONTEND_URL = process.env.SMOKE_FRONTEND_URL || 'https://enquiry-hub.karthikmuneeswaran.com';
-const HMAC_SECRET = process.env.SMOKE_HMAC_SECRET || 'not-configured';
-const API_KEY = process.env.SMOKE_API_KEY || 'not-configured';
 
 // Timeout for individual requests (seconds)
 const REQUEST_TIMEOUT = 10_000;
@@ -65,7 +62,7 @@ describe('Smoke Tests', () => {
     const response = await client.post('/api/v1/enquiry', payload, {
       headers: {
         'Content-Type': 'application/json',
-        'Idempotency-Key': crypto.randomUUID(),
+        'Idempotency-Key': `smoke-${Date.now()}-${Math.random().toString(36).slice(2)}`,
       },
     });
 
