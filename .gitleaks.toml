@@ -1,0 +1,9 @@
+[extend]
+# Use the default gitleaks config as base
+useDefault = true
+
+[allowlist]
+# Security report contains example curl commands with dummy credentials for documentation
+paths = [
+  '''SECURITY_REPORT\.md''',
+]
