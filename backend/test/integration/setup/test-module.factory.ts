@@ -40,9 +40,7 @@ export async function createTestApp(): Promise<{
   app.use(express.json({ limit: '1mb' }));
 
   app.setGlobalPrefix('api', {
-    exclude: [
-      { path: 'health/(.*)', method: 0 },
-    ],
+    exclude: [{ path: 'health/(.*)', method: 0 }],
   });
 
   app.enableVersioning({
