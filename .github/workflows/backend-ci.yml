@@ -219,8 +219,8 @@ jobs:
           script: |
             cd /opt/enquiry-platform
             git pull origin main
-            # Rebuild and restart backend container (zero-downtime via PM2 inside container)
-            docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build --no-deps backend
+            # Rebuild and restart backend + nginx containers
+            docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build --force-recreate --no-deps backend nginx
             # Run database migrations
             sleep 10
             docker compose exec -T backend node_modules/.bin/prisma migrate deploy
