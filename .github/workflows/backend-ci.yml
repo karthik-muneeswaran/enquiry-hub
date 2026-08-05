@@ -257,6 +257,9 @@ jobs:
       - name: Run smoke tests against production
         env:
           SMOKE_BASE_URL: https://enquiry-hub-backend.karthikmuneeswaran.com
+          SMOKE_FRONTEND_URL: https://enquiry-hub.karthikmuneeswaran.com
+          SMOKE_HMAC_SECRET: ${{ secrets.HMAC_SECRET }}
+          SMOKE_API_KEY: ${{ secrets.SMOKE_API_KEY }}
         run: npx jest --selectProjects smoke --runInBand --forceExit
 
       - name: Auto-rollback on failure
