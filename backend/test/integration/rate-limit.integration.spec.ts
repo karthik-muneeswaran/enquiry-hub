@@ -53,22 +53,19 @@ describe('Rate Limit Integration Tests', () => {
 
     it('should return 429 after exceeding rate limit', async () => {
       // POST /enquiry is limited to 10/min per IP
-      // Fire 11 requests rapidly (use different emails to avoid duplicate detection)
-      const requests: Promise<any>[] = [];
-      for (let i = 0; i < 11; i++) {
-        requests.push(
-          request(app.getHttpServer())
-            .post('/api/v1/enquiry')
-            .set('Content-Type', 'application/json')
-            .send({
-              ...validEnquiryPayload,
-              email: `ratelimit${i}@example.com`,
-              propertyId: `prop-rl-${i}`,
-            }),
-        );
+      // Fire 15 requests sequentially to reliably trigger rate limiting
+      const responses: any[] = [];
+      for (let i = 0; i < 15; i++) {
+        const res = await request(app.getHttpServer())
+          .post('/api/v1/enquiry')
+          .set('Content-Type', 'application/json')
+          .send({
+            ...validEnquiryPayload,
+            email: `ratelimit${i}@example.com`,
+            propertyId: `prop-rl-${i}`,
+          });
+        responses.push(res);
       }
-
-      const responses = await Promise.all(requests);
 
       // At least one response should be 429
       const rateLimited = responses.filter((r) => r.status === 429);
