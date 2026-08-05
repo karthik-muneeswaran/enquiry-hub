@@ -72,6 +72,10 @@ async function bootstrap() {
       .build();
 
     const document = SwaggerModule.createDocument(app, swaggerConfig);
+
+    // Ensure Swagger UI "Try it out" uses the correct base URL
+    document.servers = [{ url: '/' }];
+
     SwaggerModule.setup('docs', app, document, {
       useGlobalPrefix: true,
       swaggerOptions: {
