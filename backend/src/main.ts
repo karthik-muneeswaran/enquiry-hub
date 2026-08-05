@@ -42,14 +42,26 @@ async function bootstrap() {
     }),
   );
 
-  // Swagger setup (must be before globalPrefix to avoid path conflicts)
+  // Global prefix: all routes start with /api
+  app.setGlobalPrefix('api', {
+    exclude: [
+      { path: 'health/(.*)', method: 0 }, // RequestMethod.GET = 0
+    ],
+  });
+
+  // URI versioning: /api/v1/..., /api/v2/...
+  app.enableVersioning({
+    type: VersioningType.URI,
+    defaultVersion: '1',
+  });
+
+  // Swagger setup (after prefix + versioning so docs show full paths)
   const swaggerEnabled = configService.get<string>('SWAGGER_ENABLED', 'true') !== 'false';
   if (swaggerEnabled) {
     const swaggerConfig = new DocumentBuilder()
       .setTitle('Enquiry Backend Platform')
       .setDescription('API for managing property enquiries, CRM integrations, and notifications')
       .setVersion('1.0.0')
-      .addServer('/api/v1', 'Production API (versioned)')
       .addApiKey({ type: 'apiKey', name: 'X-API-Key', in: 'header' }, 'api-key')
       .addTag('Enquiry', 'Property enquiry CRUD operations')
       .addTag('Webhook', 'CRM webhook ingestion')
@@ -67,19 +79,6 @@ async function bootstrap() {
       },
     });
   }
-
-  // Global prefix: all routes start with /api
-  app.setGlobalPrefix('api', {
-    exclude: [
-      { path: 'health/(.*)', method: 0 }, // RequestMethod.GET = 0
-    ],
-  });
-
-  // URI versioning: /api/v1/..., /api/v2/...
-  app.enableVersioning({
-    type: VersioningType.URI,
-    defaultVersion: '1',
-  });
 
   // Global exception filter: structured error responses
   app.useGlobalFilters(new GlobalExceptionFilter());
