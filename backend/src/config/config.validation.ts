@@ -19,9 +19,7 @@ export const configValidationSchema = Joi.object({
   SWAGGER_ENABLED: Joi.boolean().default(true),
 
   // Logging
-  LOG_LEVEL: Joi.string()
-    .valid('fatal', 'error', 'warn', 'info', 'debug', 'trace')
-    .default('info'),
+  LOG_LEVEL: Joi.string().valid('fatal', 'error', 'warn', 'info', 'debug', 'trace').default('info'),
 
   // Security
   HMAC_SECRET: Joi.string().required().messages({

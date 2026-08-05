@@ -1,10 +1,4 @@
-import {
-  Injectable,
-  OnModuleDestroy,
-  Logger,
-  Inject,
-  Optional,
-} from '@nestjs/common';
+import { Injectable, OnModuleDestroy, Logger, Inject, Optional } from '@nestjs/common';
 import { PrismaService } from '@database/prisma.service';
 import { SHUTDOWN_DRAIN_MS } from '@common/constants';
 
@@ -64,9 +58,7 @@ export class GracefulShutdownService implements OnModuleDestroy {
         await queue.pause();
         this.logger.log(`Queue "${queue.name}" paused.`);
       } catch (error) {
-        this.logger.warn(
-          `Failed to pause queue "${queue.name}": ${(error as Error).message}`,
-        );
+        this.logger.warn(`Failed to pause queue "${queue.name}": ${(error as Error).message}`);
       }
     });
 
@@ -77,9 +69,7 @@ export class GracefulShutdownService implements OnModuleDestroy {
    * Waits for in-flight operations to complete, up to SHUTDOWN_DRAIN_MS.
    */
   private async drainInFlight(): Promise<void> {
-    this.logger.log(
-      `Waiting up to ${SHUTDOWN_DRAIN_MS}ms for in-flight operations to drain...`,
-    );
+    this.logger.log(`Waiting up to ${SHUTDOWN_DRAIN_MS}ms for in-flight operations to drain...`);
 
     await this.delay(Math.min(SHUTDOWN_DRAIN_MS, 5_000));
 
@@ -95,9 +85,7 @@ export class GracefulShutdownService implements OnModuleDestroy {
       await this.prisma.$disconnect();
       this.logger.log('Database disconnected.');
     } catch (error) {
-      this.logger.error(
-        `Error disconnecting database: ${(error as Error).message}`,
-      );
+      this.logger.error(`Error disconnecting database: ${(error as Error).message}`);
     }
   }
 
@@ -119,9 +107,7 @@ export class GracefulShutdownService implements OnModuleDestroy {
       }
       this.logger.log('Redis connection closed.');
     } catch (error) {
-      this.logger.error(
-        `Error closing Redis connection: ${(error as Error).message}`,
-      );
+      this.logger.error(`Error closing Redis connection: ${(error as Error).message}`);
     }
   }
 

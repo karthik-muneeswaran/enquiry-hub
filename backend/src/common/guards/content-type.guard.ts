@@ -5,7 +5,6 @@ import {
   HttpStatus,
   Injectable,
 } from '@nestjs/common';
-import { Request } from 'express';
 import { ApiErrorCode } from '@common/response';
 import { getRequestFromContext } from '@common/utils';
 

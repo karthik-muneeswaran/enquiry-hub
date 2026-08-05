@@ -67,9 +67,7 @@ export class MetricsService {
         description: 'Duration of HTTP requests in seconds',
         unit: 's',
         advice: {
-          explicitBucketBoundaries: [
-            0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10,
-          ],
+          explicitBucketBoundaries: [0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10],
         },
       },
       {
@@ -116,22 +114,21 @@ export class MetricsService {
     for (const def of gaugeDefinitions) {
       this.gaugeValues.set(def.name, 0);
 
-      this.meter.createObservableGauge(def.name, {
-        description: def.description,
-      }).addCallback((observableResult) => {
-        const value = this.gaugeValues.get(def.name) ?? 0;
-        observableResult.observe(value);
-      });
+      this.meter
+        .createObservableGauge(def.name, {
+          description: def.description,
+        })
+        .addCallback((observableResult) => {
+          const value = this.gaugeValues.get(def.name) ?? 0;
+          observableResult.observe(value);
+        });
     }
   }
 
   /**
    * Increment a counter metric by 1 (or more).
    */
-  incrementCounter(
-    name: string,
-    labels?: Record<string, string>,
-  ): void {
+  incrementCounter(name: string, labels?: Record<string, string>): void {
     const counter = this.counters.get(name);
     if (!counter) {
       this.logger.warn(`Counter "${name}" not found`);
@@ -143,11 +140,7 @@ export class MetricsService {
   /**
    * Record a value in a histogram metric.
    */
-  recordHistogram(
-    name: string,
-    value: number,
-    labels?: Record<string, string>,
-  ): void {
+  recordHistogram(name: string, value: number, labels?: Record<string, string>): void {
     const histogram = this.histograms.get(name);
     if (!histogram) {
       this.logger.warn(`Histogram "${name}" not found`);
@@ -159,11 +152,7 @@ export class MetricsService {
   /**
    * Set the current value of a gauge metric.
    */
-  setGauge(
-    name: string,
-    value: number,
-    labels?: Record<string, string>,
-  ): void {
+  setGauge(name: string, value: number, _labels?: Record<string, string>): void {
     if (!this.gaugeValues.has(name)) {
       this.logger.warn(`Gauge "${name}" not found`);
       return;

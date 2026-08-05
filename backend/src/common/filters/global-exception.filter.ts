@@ -31,8 +31,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     const requestId = request.id || 'unknown';
     const timestamp = new Date().toISOString();
 
-    const { statusCode, code, message, details } =
-      this.resolveException(exception);
+    const { statusCode, code, message, details } = this.resolveException(exception);
 
     // Log server errors with full context; client errors at debug level
     if (statusCode >= 500) {
@@ -100,16 +99,14 @@ export class GlobalExceptionFilter implements ExceptionFilter {
 
       // Validation errors from ValidationPipe
       if (statusCode === HttpStatus.BAD_REQUEST && Array.isArray(resp.message)) {
-        const details: ApiErrorDetail[] = (resp.message as string[]).map(
-          (msg) => {
-            const field = this.extractFieldFromMessage(msg);
-            return {
-              field,
-              message: msg,
-              constraint: this.extractConstraintFromMessage(msg),
-            };
-          },
-        );
+        const details: ApiErrorDetail[] = (resp.message as string[]).map((msg) => {
+          const field = this.extractFieldFromMessage(msg);
+          return {
+            field,
+            message: msg,
+            constraint: this.extractConstraintFromMessage(msg),
+          };
+        });
 
         return {
           statusCode,
@@ -119,10 +116,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
         };
       }
 
-      const message =
-        typeof resp.message === 'string'
-          ? resp.message
-          : 'Request failed';
+      const message = typeof resp.message === 'string' ? resp.message : 'Request failed';
 
       return {
         statusCode,
@@ -132,10 +126,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     }
 
     // Simple string response
-    const message =
-      typeof exceptionResponse === 'string'
-        ? exceptionResponse
-        : exception.message;
+    const message = typeof exceptionResponse === 'string' ? exceptionResponse : exception.message;
 
     return {
       statusCode,
@@ -156,10 +147,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     );
   }
 
-  private handlePrismaError(exception: {
-    code: string;
-    meta?: Record<string, unknown>;
-  }): {
+  private handlePrismaError(exception: { code: string; meta?: Record<string, unknown> }): {
     statusCode: number;
     code: string;
     message: string;

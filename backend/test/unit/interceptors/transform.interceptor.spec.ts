@@ -44,7 +44,7 @@ describe('TransformInterceptor', () => {
     const handler = createMockHandler({ id: 1 });
 
     const result$ = interceptor.intercept(context, handler);
-    const result = await lastValueFrom(result$) as any;
+    const result = (await lastValueFrom(result$)) as any;
 
     expect(result.timestamp).toMatch(/^\d{4}-\d{2}-\d{2}T/);
   });
@@ -64,7 +64,7 @@ describe('TransformInterceptor', () => {
     const handler = createMockHandler(null);
 
     const result$ = interceptor.intercept(context, handler);
-    const result = await lastValueFrom(result$) as any;
+    const result = (await lastValueFrom(result$)) as any;
 
     expect(result.success).toBe(true);
     expect(result.data).toBeNull();
@@ -75,7 +75,7 @@ describe('TransformInterceptor', () => {
     const handler = createMockHandler([{ id: 1 }, { id: 2 }]);
 
     const result$ = interceptor.intercept(context, handler);
-    const result = await lastValueFrom(result$) as any;
+    const result = (await lastValueFrom(result$)) as any;
 
     expect(result.success).toBe(true);
     expect(result.data).toEqual([{ id: 1 }, { id: 2 }]);
@@ -92,7 +92,7 @@ describe('TransformInterceptor', () => {
     const handler = createMockHandler({ x: 1 });
 
     const result$ = interceptor.intercept(context, handler);
-    const result = await lastValueFrom(result$) as any;
+    const result = (await lastValueFrom(result$)) as any;
 
     expect(result.request_id).toBe('unknown');
   });

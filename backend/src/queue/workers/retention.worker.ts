@@ -92,9 +92,7 @@ export class RetentionWorker extends WorkerHost implements OnModuleInit {
       },
     });
 
-    this.logger.log(
-      `Deleted ${result.count} processed webhook events older than 90 days`,
-    );
+    this.logger.log(`Deleted ${result.count} processed webhook events older than 90 days`);
     return result.count;
   }
 
@@ -106,18 +104,12 @@ export class RetentionWorker extends WorkerHost implements OnModuleInit {
     const thirtyDaysMs = 30 * 24 * 60 * 60 * 1000;
 
     try {
-      const cleaned = await this.maintenanceQueue.clean(
-        thirtyDaysMs,
-        100,
-        'completed',
-      );
+      const cleaned = await this.maintenanceQueue.clean(thirtyDaysMs, 100, 'completed');
       this.logger.log(
         `Cleaned ${cleaned.length} completed maintenance queue jobs older than 30 days`,
       );
     } catch (error) {
-      this.logger.warn(
-        `Failed to clean completed queue jobs: ${(error as Error).message}`,
-      );
+      this.logger.warn(`Failed to clean completed queue jobs: ${(error as Error).message}`);
     }
   }
 }

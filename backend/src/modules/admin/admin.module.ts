@@ -42,8 +42,6 @@ export class AdminModule implements NestModule {
       serverAdapter,
     });
 
-    consumer
-      .apply(serverAdapter.getRouter())
-      .forRoutes('/admin/queues/board');
+    consumer.apply(serverAdapter.getRouter()).forRoutes('/admin/queues/board');
   }
 }

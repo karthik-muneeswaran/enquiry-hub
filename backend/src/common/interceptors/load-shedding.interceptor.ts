@@ -6,7 +6,6 @@ import {
   ServiceUnavailableException,
 } from '@nestjs/common';
 import { Observable } from 'rxjs';
-import { Response } from 'express';
 import { EventLoopMonitor } from '@common/services/event-loop-monitor.service';
 import { getResponseFromContext } from '@common/utils';
 
@@ -25,10 +24,7 @@ export class LoadSheddingInterceptor implements NestInterceptor {
     if (this.eventLoopMonitor.isShedding) {
       const response = getResponseFromContext(context);
       if (response) {
-        response.setHeader(
-          'Retry-After',
-          String(LoadSheddingInterceptor.RETRY_AFTER_SECONDS),
-        );
+        response.setHeader('Retry-After', String(LoadSheddingInterceptor.RETRY_AFTER_SECONDS));
       }
 
       throw new ServiceUnavailableException({

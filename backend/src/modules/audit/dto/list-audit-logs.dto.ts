@@ -39,5 +39,5 @@ export class ListAuditLogsDto extends BaseQueryDto {
   })
   @IsOptional()
   @IsIn(['createdAt'])
-  sortBy?: 'createdAt' = 'createdAt';
+  sortBy?: string = 'createdAt';
 }

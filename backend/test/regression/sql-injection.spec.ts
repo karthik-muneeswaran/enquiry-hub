@@ -62,7 +62,7 @@ describe('Regression: SQL Injection Prevention', () => {
 
   it('should not expose all records via OR injection in search param', async () => {
     const response = await request(app.getHttpServer())
-      .get("/api/v1/enquiries")
+      .get('/api/v1/enquiries')
       .query({ search: "' OR '1'='1" })
       .set('Content-Type', 'application/json');
 
@@ -80,7 +80,7 @@ describe('Regression: SQL Injection Prevention', () => {
   it('should reject UNION-based injection in cursor parameter', async () => {
     const response = await request(app.getHttpServer())
       .get('/api/v1/enquiries')
-      .query({ cursor: "eyJpZCI6IicgVU5JT04gU0VMRUNUICogRlJPTSBwZ19jYXRhbG9nLnBnX3VzZXIgLS0ifQ==" })
+      .query({ cursor: 'eyJpZCI6IicgVU5JT04gU0VMRUNUICogRlJPTSBwZ19jYXRhbG9nLnBnX3VzZXIgLS0ifQ==' })
       .set('Content-Type', 'application/json');
 
     // Should return 400 (invalid cursor) or 200 empty, never 500

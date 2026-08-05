@@ -1,8 +1,4 @@
-import {
-  ExecutionContext,
-  CallHandler,
-  ServiceUnavailableException,
-} from '@nestjs/common';
+import { ExecutionContext, CallHandler, ServiceUnavailableException } from '@nestjs/common';
 import { of, lastValueFrom } from 'rxjs';
 import { LoadSheddingInterceptor } from '@/common/interceptors/load-shedding.interceptor';
 
@@ -41,9 +37,7 @@ describe('LoadSheddingInterceptor', () => {
     mockMonitor.isShedding = false;
     const context = createMockContext();
 
-    const result = await lastValueFrom(
-      interceptor.intercept(context, mockHandler),
-    );
+    const result = await lastValueFrom(interceptor.intercept(context, mockHandler));
 
     expect(result).toBe('response-data');
   });
@@ -52,9 +46,7 @@ describe('LoadSheddingInterceptor', () => {
     mockMonitor.isShedding = true;
     const context = createMockContext();
 
-    expect(() => interceptor.intercept(context, mockHandler)).toThrow(
-      ServiceUnavailableException,
-    );
+    expect(() => interceptor.intercept(context, mockHandler)).toThrow(ServiceUnavailableException);
   });
 
   it('should set Retry-After header when shedding', () => {
@@ -103,9 +95,7 @@ describe('LoadSheddingInterceptor', () => {
     mockMonitor.isShedding = false;
     const context = createMockContext();
 
-    const result = await lastValueFrom(
-      interceptor.intercept(context, mockHandler),
-    );
+    const result = await lastValueFrom(interceptor.intercept(context, mockHandler));
     expect(result).toBe('response-data');
   });
 });

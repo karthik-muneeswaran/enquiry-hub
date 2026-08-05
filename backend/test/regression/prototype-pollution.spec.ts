@@ -47,7 +47,7 @@ describe('Regression: Prototype Pollution Prevention', () => {
       message: 'Test',
       source: 'website',
       consentGiven: true,
-      '__proto__': { 'isAdmin': true, 'role': 'superuser' },
+      __proto__: { isAdmin: true, role: 'superuser' },
     });
 
     const response = await request(app.getHttpServer())
@@ -74,7 +74,7 @@ describe('Regression: Prototype Pollution Prevention', () => {
       message: 'Test',
       source: 'website',
       consentGiven: true,
-      'constructor': { 'prototype': { 'polluted': true } },
+      constructor: { prototype: { polluted: true } },
     });
 
     const response = await request(app.getHttpServer())
@@ -90,8 +90,7 @@ describe('Regression: Prototype Pollution Prevention', () => {
     expect(response.status).not.toBe(500);
 
     // Subsequent requests should work normally (no pollution carried over)
-    const healthResponse = await request(app.getHttpServer())
-      .get('/health/live');
+    const healthResponse = await request(app.getHttpServer()).get('/health/live');
     expect(healthResponse.status).toBe(200);
   });
 });

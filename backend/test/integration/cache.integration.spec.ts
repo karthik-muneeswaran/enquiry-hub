@@ -121,9 +121,7 @@ describe('Cache Integration Tests', () => {
     it('should support delete operations in pipeline', async () => {
       await cacheService.set('pipe:del', 'to-be-deleted');
 
-      await cacheService.pipeline([
-        { type: 'del', key: 'pipe:del' },
-      ]);
+      await cacheService.pipeline([{ type: 'del', key: 'pipe:del' }]);
 
       const result = await cacheService.get('pipe:del');
       expect(result).toBeNull();

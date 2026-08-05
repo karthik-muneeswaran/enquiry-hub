@@ -2,11 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Prisma, AuditLog } from '@prisma/client';
 import { PrismaService } from '@database/prisma.service';
 import { IAuditService } from '@modules/enquiry/interfaces';
-import {
-  AuditRepository,
-  PaginatedResult,
-  PrismaTransaction,
-} from './audit.repository';
+import { AuditRepository, PaginatedResult, PrismaTransaction } from './audit.repository';
 import { ListAuditLogsDto } from './dto';
 
 export interface LogChangeParams {
@@ -33,9 +29,7 @@ export class AuditService implements IAuditService {
    * If tx is provided, the audit record is created within the caller's transaction.
    * If no tx, a standalone write is performed.
    */
-  async logChange(
-    params: LogChangeParams & { tx?: PrismaTransaction },
-  ): Promise<void> {
+  async logChange(params: LogChangeParams & { tx?: PrismaTransaction }): Promise<void> {
     const {
       entity,
       entityId,
@@ -51,8 +45,8 @@ export class AuditService implements IAuditService {
       entity,
       entityId,
       action,
-      before: before as Prisma.InputJsonValue ?? Prisma.JsonNull,
-      after: after as Prisma.InputJsonValue ?? Prisma.JsonNull,
+      before: (before as Prisma.InputJsonValue) ?? Prisma.JsonNull,
+      after: (after as Prisma.InputJsonValue) ?? Prisma.JsonNull,
       performedBy,
       requestId,
     };

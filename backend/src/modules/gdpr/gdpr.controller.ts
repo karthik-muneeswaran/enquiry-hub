@@ -1,11 +1,5 @@
 import { Controller, Get, Delete, Param, Query } from '@nestjs/common';
-import {
-  ApiTags,
-  ApiOperation,
-  ApiResponse,
-  ApiParam,
-  ApiQuery,
-} from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiQuery } from '@nestjs/swagger';
 import { RateLimit } from '@common/decorators';
 import { GdprService } from './gdpr.service';
 import { GdprExportQueryDto } from './dto';
@@ -53,10 +47,7 @@ export class GdprController {
     status: 429,
     description: 'Rate limit exceeded',
   })
-  async exportData(
-    @Param('email') email: string,
-    @Query() query: GdprExportQueryDto,
-  ) {
+  async exportData(@Param('email') email: string, @Query() query: GdprExportQueryDto) {
     return this.gdprService.exportData(email, query);
   }
 

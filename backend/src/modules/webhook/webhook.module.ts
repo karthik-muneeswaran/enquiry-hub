@@ -7,10 +7,7 @@ import { WebhookRepository } from './webhook.repository';
 import { WebhookService } from './webhook.service';
 
 @Module({
-  imports: [
-    AppConfigModule,
-    BullModule.registerQueue({ name: QUEUE_NAMES.CRM }),
-  ],
+  imports: [AppConfigModule, BullModule.registerQueue({ name: QUEUE_NAMES.CRM })],
   controllers: [WebhookController],
   providers: [WebhookRepository, WebhookService],
   exports: [WebhookRepository, WebhookService],

@@ -39,52 +39,38 @@ export class EnquiryService {
    * Create a new enquiry with idempotency, duplicate detection,
    * and transactional audit logging.
    */
-  async create(
-    dto: CreateEnquiryDto,
-    idempotencyKey?: string,
-  ): Promise<Enquiry> {
+  async create(dto: CreateEnquiryDto, idempotencyKey?: string): Promise<Enquiry> {
     // 1. Check idempotency key in Redis
     if (idempotencyKey) {
       const cached = await this.getIdempotencyResponse(idempotencyKey);
       if (cached) {
-        this.logger.log(
-          `Idempotent duplicate detected for key: ${idempotencyKey}`,
-        );
+        this.logger.log(`Idempotent duplicate detected for key: ${idempotencyKey}`);
         return cached;
       }
     }
 
     // 2. Check for duplicate enquiry (Redis-first, then DB fallback)
-    const cachedDup = await this.enquiryCacheService.isDuplicate(
-      dto.email,
-      dto.propertyId,
-    );
+    const cachedDup = await this.enquiryCacheService.isDuplicate(dto.email, dto.propertyId);
 
     if (cachedDup === true) {
       // Redis confirmed duplicate exists
       throw new ConflictException({
         statusCode: 409,
         error: 'Conflict',
-        message:
-          'A duplicate enquiry for this property was submitted within the last 10 minutes',
+        message: 'A duplicate enquiry for this property was submitted within the last 10 minutes',
         code: ApiErrorCode.DUPLICATE_ENQUIRY,
       });
     }
 
     // Cache miss — check DB as fallback
     if (cachedDup === null) {
-      const duplicate = await this.enquiryRepository.findDuplicate(
-        dto.email,
-        dto.propertyId,
-        10,
-      );
+      const duplicate = await this.enquiryRepository.findDuplicate(dto.email, dto.propertyId, 10);
 
       if (duplicate) {
         throw new ConflictException({
           statusCode: 409,
           error: 'Conflict',
-          message:
-            'A duplicate enquiry for this property was submitted within the last 10 minutes',
+          message: 'A duplicate enquiry for this property was submitted within the last 10 minutes',
           code: ApiErrorCode.DUPLICATE_ENQUIRY,
         });
       }
@@ -153,9 +139,8 @@ export class EnquiryService {
    * Throws NotFoundException if not found.
    */
   async findById(id: string): Promise<Enquiry> {
-    const enquiry = await this.enquiryCacheService.getById(
-      id,
-      () => this.enquiryRepository.findById(id),
+    const enquiry = await this.enquiryCacheService.getById(id, () =>
+      this.enquiryRepository.findById(id),
     );
 
     if (!enquiry) {
@@ -175,9 +160,8 @@ export class EnquiryService {
    * Uses Redis cache with SWR + mutex stampede protection.
    */
   async findAll(params: ListEnquiriesDto): Promise<PaginatedResult<Enquiry>> {
-    return this.enquiryCacheService.getList(
-      params,
-      () => this.enquiryRepository.findWithCursor(params),
+    return this.enquiryCacheService.getList(params, () =>
+      this.enquiryRepository.findWithCursor(params),
     );
   }
 
@@ -185,11 +169,7 @@ export class EnquiryService {
    * Update the status of an enquiry.
    * Records an audit log and updates cache.
    */
-  async updateStatus(
-    id: string,
-    status: EnquiryStatus,
-    performedBy: string,
-  ): Promise<Enquiry> {
+  async updateStatus(id: string, status: EnquiryStatus, performedBy: string): Promise<Enquiry> {
     // Verify the enquiry exists
     const existing = await this.enquiryRepository.findById(id);
     if (!existing) {
@@ -246,9 +226,7 @@ export class EnquiryService {
   /**
    * Check Redis for an existing idempotency response.
    */
-  private async getIdempotencyResponse(
-    key: string,
-  ): Promise<Enquiry | null> {
+  private async getIdempotencyResponse(key: string): Promise<Enquiry | null> {
     try {
       const cached = await this.redis.get(`idempotency:${key}`);
       if (cached) {
@@ -256,9 +234,7 @@ export class EnquiryService {
       }
       return null;
     } catch (error) {
-      this.logger.warn(
-        `Failed to check idempotency key in Redis: ${(error as Error).message}`,
-      );
+      this.logger.warn(`Failed to check idempotency key in Redis: ${(error as Error).message}`);
       return null;
     }
   }
@@ -266,10 +242,7 @@ export class EnquiryService {
   /**
    * Store an idempotency response in Redis with 24-hour TTL.
    */
-  private async storeIdempotencyResponse(
-    key: string,
-    enquiry: Enquiry,
-  ): Promise<void> {
+  private async storeIdempotencyResponse(key: string, enquiry: Enquiry): Promise<void> {
     try {
       await this.redis.set(
         `idempotency:${key}`,
@@ -278,9 +251,7 @@ export class EnquiryService {
         86400, // 24 hours
       );
     } catch (error) {
-      this.logger.warn(
-        `Failed to store idempotency key in Redis: ${(error as Error).message}`,
-      );
+      this.logger.warn(`Failed to store idempotency key in Redis: ${(error as Error).message}`);
     }
   }
 
@@ -289,9 +260,7 @@ export class EnquiryService {
    */
   private async enqueueNotifications(enquiry: Enquiry): Promise<void> {
     if (!this.notificationProducer) {
-      this.logger.debug(
-        'NotificationProducer not available, skipping notification enqueue',
-      );
+      this.logger.debug('NotificationProducer not available, skipping notification enqueue');
       return;
     }
 

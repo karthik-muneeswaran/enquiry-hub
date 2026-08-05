@@ -1,12 +1,7 @@
-import {
-  Injectable,
-  NestInterceptor,
-  ExecutionContext,
-  CallHandler,
-} from '@nestjs/common';
+import { Injectable, NestInterceptor, ExecutionContext, CallHandler } from '@nestjs/common';
 import { Observable } from 'rxjs';
 import { tap } from 'rxjs/operators';
-import { Request, Response } from 'express';
+import { Request } from 'express';
 import { MetricsService } from '../../observability/metrics.service';
 import { getRequestFromContext, getResponseFromContext } from '@common/utils';
 
@@ -34,11 +29,7 @@ export class HttpMetricsInterceptor implements NestInterceptor {
     );
   }
 
-  private recordMetric(
-    context: ExecutionContext,
-    request: Request,
-    startTime: bigint,
-  ): void {
+  private recordMetric(context: ExecutionContext, request: Request, startTime: bigint): void {
     const response = getResponseFromContext(context);
     const durationNs = process.hrtime.bigint() - startTime;
     const durationSeconds = Number(durationNs) / 1e9;
@@ -47,10 +38,10 @@ export class HttpMetricsInterceptor implements NestInterceptor {
     const route = (request as any).route?.path || request.path || 'unknown';
     const status = response?.statusCode?.toString() || 'unknown';
 
-    this.metricsService.recordHistogram(
-      'http_request_duration_seconds',
-      durationSeconds,
-      { method, route, status },
-    );
+    this.metricsService.recordHistogram('http_request_duration_seconds', durationSeconds, {
+      method,
+      route,
+      status,
+    });
   }
 }

@@ -29,21 +29,17 @@ export class CrmSyncWorker extends WorkerHost {
   ) {
     super();
 
-    this.crmWebhookUrl =
-      this.configService.get<string>('CRM_WEBHOOK_URL') || '';
+    this.crmWebhookUrl = this.configService.get<string>('CRM_WEBHOOK_URL') || '';
 
     // Create circuit breaker wrapping the CRM API delivery call
-    this.crmBreaker = new CircuitBreaker(
-      this.deliverToCrm.bind(this),
-      {
-        timeout: 10000,
-        errorThresholdPercentage: 50,
-        resetTimeout: 30000,
-        volumeThreshold: 5,
-        rollingCountTimeout: 30000,
-        name: 'crm',
-      },
-    );
+    this.crmBreaker = new CircuitBreaker(this.deliverToCrm.bind(this), {
+      timeout: 10000,
+      errorThresholdPercentage: 50,
+      resetTimeout: 30000,
+      volumeThreshold: 5,
+      rollingCountTimeout: 30000,
+      name: 'crm',
+    });
 
     this.crmBreaker.on('open', () => {
       this.logger.warn(
@@ -141,9 +137,7 @@ export class CrmSyncWorker extends WorkerHost {
 
     // Circuit breaker is open — retry later
     if (this.crmBreaker.opened) {
-      this.logger.warn(
-        `CRM circuit breaker OPEN for eventId=${eventId} — job will be retried`,
-      );
+      this.logger.warn(`CRM circuit breaker OPEN for eventId=${eventId} — job will be retried`);
       throw new Error(
         `CRM circuit breaker is OPEN — retry after reset timeout (eventId=${eventId})`,
       );
@@ -155,12 +149,8 @@ export class CrmSyncWorker extends WorkerHost {
 
       // 429 Too Many Requests — transient, retry
       if (status === 429) {
-        this.logger.warn(
-          `CRM rate limited (429) for eventId=${eventId} — will retry`,
-        );
-        throw new Error(
-          `CRM rate limited (429) for eventId=${eventId}`,
-        );
+        this.logger.warn(`CRM rate limited (429) for eventId=${eventId} — will retry`);
+        throw new Error(`CRM rate limited (429) for eventId=${eventId}`);
       }
 
       // 4xx (except 429) — permanent failure, do not retry
@@ -175,22 +165,14 @@ export class CrmSyncWorker extends WorkerHost {
 
       // 5xx — transient, retry
       if (status && status >= 500) {
-        this.logger.warn(
-          `CRM server error (${status}) for eventId=${eventId} — will retry`,
-        );
-        throw new Error(
-          `CRM server error (${status}) for eventId=${eventId}: ${error.message}`,
-        );
+        this.logger.warn(`CRM server error (${status}) for eventId=${eventId} — will retry`);
+        throw new Error(`CRM server error (${status}) for eventId=${eventId}: ${error.message}`);
       }
     }
 
     // Network error, timeout, or unknown — transient, retry
-    this.logger.warn(
-      `CRM delivery failed for eventId=${eventId}: ${error.message} — will retry`,
-    );
-    throw new Error(
-      `CRM delivery failed for eventId=${eventId}: ${error.message}`,
-    );
+    this.logger.warn(`CRM delivery failed for eventId=${eventId}: ${error.message} — will retry`);
+    throw new Error(`CRM delivery failed for eventId=${eventId}: ${error.message}`);
   }
 
   /**
@@ -251,9 +233,7 @@ export class CrmSyncWorker extends WorkerHost {
   ): Promise<void> {
     if (!this.crmWebhookUrl) {
       // In development without CRM_WEBHOOK_URL configured, log and succeed
-      this.logger.log(
-        `[DEV] CRM delivery simulated for eventId=${eventId}, type=${type}`,
-      );
+      this.logger.log(`[DEV] CRM delivery simulated for eventId=${eventId}, type=${type}`);
       return;
     }
 

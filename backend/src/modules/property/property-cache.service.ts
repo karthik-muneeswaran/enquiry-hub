@@ -6,8 +6,8 @@ import * as crypto from 'crypto';
 
 /** Default cache TTL options for properties */
 const PROPERTY_CACHE_OPTIONS: CacheOptions = {
-  staleTtl: 5 * 60,    // 5 minutes before stale
-  expireTtl: 15 * 60,  // 15 minutes before expired
+  staleTtl: 5 * 60, // 5 minutes before stale
+  expireTtl: 15 * 60, // 15 minutes before expired
 };
 
 /**
@@ -54,7 +54,11 @@ export class PropertyCacheService {
     refreshFn: () => Promise<PropertyConnection>,
   ): Promise<PropertyConnection> {
     const key = this.listKey(params);
-    return this.cacheService.getOrRefresh<PropertyConnection>(key, refreshFn, PROPERTY_CACHE_OPTIONS);
+    return this.cacheService.getOrRefresh<PropertyConnection>(
+      key,
+      refreshFn,
+      PROPERTY_CACHE_OPTIONS,
+    );
   }
 
   /**

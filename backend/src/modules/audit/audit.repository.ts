@@ -35,10 +35,7 @@ export class AuditRepository {
    * Create an audit log record. If tx is provided, uses the
    * transaction client to participate in the caller's transaction.
    */
-  async create(
-    data: Prisma.AuditLogCreateInput,
-    tx?: PrismaTransaction,
-  ): Promise<AuditLog> {
+  async create(data: Prisma.AuditLogCreateInput, tx?: PrismaTransaction): Promise<AuditLog> {
     const client = tx ?? this.prisma;
     return client.auditLog.create({ data });
   }
@@ -47,15 +44,8 @@ export class AuditRepository {
    * Find audit logs with cursor pagination, filtering, and sorting.
    * Search applies ILIKE on entity, entityId, performedBy, and requestId.
    */
-  async findWithCursor(
-    params: ListAuditLogsDto,
-  ): Promise<PaginatedResult<AuditLog>> {
-    const {
-      cursor,
-      limit = 20,
-      sortDir = 'desc',
-      sortBy = 'createdAt',
-    } = params;
+  async findWithCursor(params: ListAuditLogsDto): Promise<PaginatedResult<AuditLog>> {
+    const { cursor, limit = 20, sortDir = 'desc', sortBy = 'createdAt' } = params;
 
     // Build filter conditions (without cursor)
     const filterConditions = this.buildFilterConditions(params);
@@ -72,12 +62,10 @@ export class AuditRepository {
       conditions.push(cursorCondition);
     }
 
-    const where: Prisma.AuditLogWhereInput =
-      conditions.length > 0 ? { AND: conditions } : {};
+    const where: Prisma.AuditLogWhereInput = conditions.length > 0 ? { AND: conditions } : {};
 
     // Get total count using only filter conditions (no cursor)
-    const countWhere =
-      Object.keys(filterConditions).length > 0 ? filterConditions : {};
+    const countWhere = Object.keys(filterConditions).length > 0 ? filterConditions : {};
     const totalCount = await this.prisma.auditLog.count({ where: countWhere });
 
     // Fetch limit + 1 to detect hasMore
@@ -117,11 +105,8 @@ export class AuditRepository {
     };
   }
 
-  private buildFilterConditions(
-    params: ListAuditLogsDto,
-  ): Prisma.AuditLogWhereInput {
-    const { search, dateFrom, dateTo, entity, entityId, action, performedBy } =
-      params;
+  private buildFilterConditions(params: ListAuditLogsDto): Prisma.AuditLogWhereInput {
+    const { search, dateFrom, dateTo, entity, entityId, action, performedBy } = params;
     const conditions: Prisma.AuditLogWhereInput[] = [];
 
     if (entity) {

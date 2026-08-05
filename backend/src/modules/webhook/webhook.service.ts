@@ -45,9 +45,7 @@ export class WebhookService {
       source: dto.source,
       payload: dto.payload as unknown as Prisma.InputJsonValue,
       status: 'RECEIVED',
-      enquiry: dto.enquiryId
-        ? { connect: { id: dto.enquiryId } }
-        : undefined,
+      enquiry: dto.enquiryId ? { connect: { id: dto.enquiryId } } : undefined,
     });
 
     // 3. Enqueue to CRM queue for asynchronous processing
@@ -80,9 +78,7 @@ export class WebhookService {
   /**
    * Find all webhook events with cursor pagination, filtering, and sorting.
    */
-  async findAll(
-    params: ListWebhookEventsDto,
-  ): Promise<PaginatedResult<WebhookEvent>> {
+  async findAll(params: ListWebhookEventsDto): Promise<PaginatedResult<WebhookEvent>> {
     return this.webhookRepository.findWithCursor(params);
   }
 }

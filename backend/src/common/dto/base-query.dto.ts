@@ -1,12 +1,4 @@
-import {
-  IsOptional,
-  IsString,
-  IsInt,
-  Min,
-  Max,
-  IsIn,
-  IsISO8601,
-} from 'class-validator';
+import { IsOptional, IsString, IsInt, Min, Max, IsIn, IsISO8601 } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 

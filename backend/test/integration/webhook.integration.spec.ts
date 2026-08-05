@@ -34,10 +34,7 @@ describe('Webhook Integration Tests', () => {
 
   function computeHmacSignature(payload: object, secret: string): string {
     const body = JSON.stringify(payload);
-    return crypto
-      .createHmac('sha256', secret)
-      .update(body)
-      .digest('hex');
+    return crypto.createHmac('sha256', secret).update(body).digest('hex');
   }
 
   const webhookPayload = {

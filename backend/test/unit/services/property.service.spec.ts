@@ -96,25 +96,19 @@ describe('PropertyService', () => {
     });
 
     it('should throw NotFoundException when neither slug nor wpId provided', async () => {
-      await expect(service.findProperty(undefined, undefined)).rejects.toThrow(
-        NotFoundException,
-      );
+      await expect(service.findProperty(undefined, undefined)).rejects.toThrow(NotFoundException);
     });
 
     it('should throw NotFoundException when property not found by slug', async () => {
       mockWordPressClient.fetchPropertyBySlug.mockResolvedValue(null);
 
-      await expect(service.findProperty('nonexistent')).rejects.toThrow(
-        NotFoundException,
-      );
+      await expect(service.findProperty('nonexistent')).rejects.toThrow(NotFoundException);
     });
 
     it('should throw NotFoundException when WordPress errors', async () => {
       mockWordPressClient.fetchPropertyBySlug.mockRejectedValue(new Error('timeout'));
 
-      await expect(service.findProperty('some-slug')).rejects.toThrow(
-        NotFoundException,
-      );
+      await expect(service.findProperty('some-slug')).rejects.toThrow(NotFoundException);
     });
   });
 

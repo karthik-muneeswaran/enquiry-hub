@@ -11,13 +11,7 @@ import {
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue, Job } from 'bullmq';
 import { Prisma, WebhookStatus } from '@prisma/client';
-import {
-  ApiTags,
-  ApiOperation,
-  ApiResponse,
-  ApiParam,
-  ApiQuery,
-} from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiQuery } from '@nestjs/swagger';
 import { PrismaService } from '@database/prisma.service';
 import { QUEUE_NAMES, DEFAULT_JOB_OPTIONS } from '@queue/queue.constants';
 import { RateLimit } from '@common/decorators';
@@ -118,10 +112,29 @@ export class AdminController {
   @ApiOperation({ summary: 'List dead-letter queue jobs with pagination and filtering' })
   @ApiQuery({ name: 'cursor', required: false, description: 'Pagination cursor' })
   @ApiQuery({ name: 'limit', required: false, type: 'number', description: 'Page size (max 100)' })
-  @ApiQuery({ name: 'queueName', required: false, enum: ['email', 'push', 'crm'], description: 'Filter by queue' })
-  @ApiQuery({ name: 'sortBy', required: false, enum: ['failedAt', 'attemptsMade'], description: 'Sort field' })
-  @ApiQuery({ name: 'sortDir', required: false, enum: ['asc', 'desc'], description: 'Sort direction' })
-  @ApiQuery({ name: 'search', required: false, description: 'Search in error message and job data' })
+  @ApiQuery({
+    name: 'queueName',
+    required: false,
+    enum: ['email', 'push', 'crm'],
+    description: 'Filter by queue',
+  })
+  @ApiQuery({
+    name: 'sortBy',
+    required: false,
+    enum: ['failedAt', 'attemptsMade'],
+    description: 'Sort field',
+  })
+  @ApiQuery({
+    name: 'sortDir',
+    required: false,
+    enum: ['asc', 'desc'],
+    description: 'Sort direction',
+  })
+  @ApiQuery({
+    name: 'search',
+    required: false,
+    description: 'Search in error message and job data',
+  })
   @ApiResponse({ status: 200, description: 'Paginated list of DLQ jobs' })
   async getDlqJobs(@Query() query: ListDlqJobsDto): Promise<PaginatedDlqResponse> {
     const { queueName, sortBy = 'failedAt', sortDir = 'desc', search, limit = 20, cursor } = query;
@@ -179,9 +192,10 @@ export class AdminController {
     const nextCursor = hasMore
       ? Buffer.from(JSON.stringify({ index: startIndex + limit })).toString('base64')
       : null;
-    const previousCursor = startIndex > 0
-      ? Buffer.from(JSON.stringify({ index: Math.max(0, startIndex - limit) })).toString('base64')
-      : null;
+    const previousCursor =
+      startIndex > 0
+        ? Buffer.from(JSON.stringify({ index: Math.max(0, startIndex - limit) })).toString('base64')
+        : null;
 
     return {
       data: paginatedJobs,
@@ -240,20 +254,19 @@ export class AdminController {
               entityId: jobData.webhookEventId,
               action: 'UPDATE',
               before: { status: WebhookStatus.DEAD_LETTER } as unknown as Prisma.InputJsonValue,
-              after: { status: WebhookStatus.RECEIVED, action: 'DLQ_RETRY' } as unknown as Prisma.InputJsonValue,
+              after: {
+                status: WebhookStatus.RECEIVED,
+                action: 'DLQ_RETRY',
+              } as unknown as Prisma.InputJsonValue,
               performedBy: 'admin',
               requestId: `dlq-retry-${jobId}`,
             },
           });
 
-          const enqueuedJob = await this.crmQueue.add(
-            'process-webhook',
-            jobData,
-            {
-              ...DEFAULT_JOB_OPTIONS,
-              jobId: `crm-retry-${jobData.eventId}-${Date.now()}`,
-            },
-          );
+          const enqueuedJob = await this.crmQueue.add('process-webhook', jobData, {
+            ...DEFAULT_JOB_OPTIONS,
+            jobId: `crm-retry-${jobData.eventId}-${Date.now()}`,
+          });
 
           return enqueuedJob;
         },
@@ -303,9 +316,7 @@ export class AdminController {
   @ApiParam({ name: 'name', description: 'Queue name (crm, email, push)' })
   @ApiResponse({ status: 200, description: 'Queue paused' })
   @ApiResponse({ status: 404, description: 'Queue not found' })
-  async pauseQueue(
-    @Param('name') name: string,
-  ): Promise<{ message: string }> {
+  async pauseQueue(@Param('name') name: string): Promise<{ message: string }> {
     const queue = this.getQueueByName(name);
     if (!queue) {
       throw new NotFoundException(`Queue "${name}" not found`);
@@ -328,9 +339,7 @@ export class AdminController {
   @ApiParam({ name: 'name', description: 'Queue name (crm, email, push)' })
   @ApiResponse({ status: 200, description: 'Queue resumed' })
   @ApiResponse({ status: 404, description: 'Queue not found' })
-  async resumeQueue(
-    @Param('name') name: string,
-  ): Promise<{ message: string }> {
+  async resumeQueue(@Param('name') name: string): Promise<{ message: string }> {
     const queue = this.getQueueByName(name);
     if (!queue) {
       throw new NotFoundException(`Queue "${name}" not found`);

@@ -7,7 +7,7 @@
  *
  * Requirements: 30.5
  */
-import axios, { AxiosInstance, AxiosResponse } from 'axios';
+import axios, { AxiosInstance } from 'axios';
 import * as crypto from 'crypto';
 
 const BASE_URL = process.env.SMOKE_BASE_URL || 'http://localhost:3000';
@@ -104,10 +104,7 @@ describe('Smoke Tests', () => {
       data: { message: 'Smoke test webhook event' },
     });
 
-    const signature = crypto
-      .createHmac('sha256', HMAC_SECRET)
-      .update(payload)
-      .digest('hex');
+    const signature = crypto.createHmac('sha256', HMAC_SECRET).update(payload).digest('hex');
 
     const response = await client.post('/api/v1/webhook/crm', payload, {
       headers: {

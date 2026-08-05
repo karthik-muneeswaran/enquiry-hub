@@ -1,9 +1,4 @@
-import {
-  CanActivate,
-  ExecutionContext,
-  Injectable,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common';
 import { Request } from 'express';
 import * as crypto from 'crypto';
 import { AppConfigService } from '@config/config.service';
@@ -25,9 +20,7 @@ export class HmacGuard implements CanActivate {
 
   canActivate(context: ExecutionContext): boolean {
     const request = context.switchToHttp().getRequest<Request>();
-    const signatureHeader = request.headers['x-webhook-signature'] as
-      | string
-      | undefined;
+    const signatureHeader = request.headers['x-webhook-signature'] as string | undefined;
 
     if (!signatureHeader) {
       throw new UnauthorizedException({
@@ -59,17 +52,11 @@ export class HmacGuard implements CanActivate {
   /**
    * Validates the HMAC-SHA256 signature using timing-safe comparison.
    */
-  validateSignature(
-    payload: string,
-    signature: string,
-    secret: string,
-  ): boolean {
+  validateSignature(payload: string, signature: string, secret: string): boolean {
     const expectedSignature = this.computeSignature(payload, secret);
 
     // Handle both raw hex and "sha256=" prefixed formats
-    const providedSignature = signature.startsWith('sha256=')
-      ? signature.slice(7)
-      : signature;
+    const providedSignature = signature.startsWith('sha256=') ? signature.slice(7) : signature;
 
     // Both must be same length for timingSafeEqual
     const expectedBuffer = Buffer.from(expectedSignature, 'hex');
@@ -86,10 +73,7 @@ export class HmacGuard implements CanActivate {
    * Computes HMAC-SHA256 of the payload using the provided secret.
    */
   private computeSignature(payload: string, secret: string): string {
-    return crypto
-      .createHmac('sha256', secret)
-      .update(payload)
-      .digest('hex');
+    return crypto.createHmac('sha256', secret).update(payload).digest('hex');
   }
 
   /**

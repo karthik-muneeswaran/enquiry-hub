@@ -18,7 +18,12 @@ import { HealthModule } from './modules/health';
 import { AdminModule } from './modules/admin';
 import { RateLimitModule } from './modules/rate-limit';
 import { EventLoopMonitor, GracefulShutdownService } from './common/services';
-import { HttpMetricsInterceptor, LoadSheddingInterceptor, RequestIdInterceptor, TransformInterceptor } from './common/interceptors';
+import {
+  HttpMetricsInterceptor,
+  LoadSheddingInterceptor,
+  RequestIdInterceptor,
+  TransformInterceptor,
+} from './common/interceptors';
 import { getLoggerConfig } from './observability';
 import { MetricsService } from './observability/metrics.service';
 

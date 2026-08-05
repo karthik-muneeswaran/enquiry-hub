@@ -77,7 +77,7 @@ jobs:
         run: npx prisma generate
 
       - name: Run unit tests with coverage
-        run: npx jest --project unit --coverage --coverageReporters=text --coverageReporters=lcov --coverageReporters=json-summary
+        run: npx jest --selectProjects unit --coverage --coverageReporters=text --coverageReporters=lcov --coverageReporters=json-summary
 
       - name: Enforce coverage threshold (≥80%)
         run: |
@@ -159,10 +159,10 @@ jobs:
         run: npx prisma migrate deploy
 
       - name: Run integration tests
-        run: npx jest --project integration --runInBand --forceExit
+        run: npx jest --selectProjects integration --runInBand --forceExit
 
       - name: Run regression tests
-        run: npx jest --project regression --runInBand --forceExit
+        run: npx jest --selectProjects regression --runInBand --forceExit
 
   # ─────────────────────────────────────────────────────────────────────────────
   # Gate 4: Docker Build + Security Scan
@@ -263,7 +263,7 @@ jobs:
       - name: Run smoke tests against production
         env:
           SMOKE_BASE_URL: https://enquiry-hub-backend.karthikmuneeswaran.com
-        run: npx jest --project smoke --runInBand --forceExit
+        run: npx jest --selectProjects smoke --runInBand --forceExit
 
       - name: Auto-rollback on failure
         if: failure()

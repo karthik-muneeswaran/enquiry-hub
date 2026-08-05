@@ -60,16 +60,12 @@ export class WordPressClient {
     });
 
     // Create circuit breaker wrapping the raw GraphQL fetch
-    this.breaker = createCircuitBreaker(
-      'wordpress',
-      this.executeGraphQL.bind(this),
-      {
-        timeout: 5000,
-        errorThresholdPercentage: 50,
-        resetTimeout: WP_RESET_TIMEOUT_MS,
-        volumeThreshold: 5,
-      },
-    );
+    this.breaker = createCircuitBreaker('wordpress', this.executeGraphQL.bind(this), {
+      timeout: 5000,
+      errorThresholdPercentage: 50,
+      resetTimeout: WP_RESET_TIMEOUT_MS,
+      volumeThreshold: 5,
+    });
   }
 
   /**
@@ -154,11 +150,9 @@ export class WordPressClient {
         }
       `;
 
-      const result = await this.fireWithFallback<{ post: WPPropertyNode | null }>(
-        cacheKey,
-        query,
-        { slug },
-      );
+      const result = await this.fireWithFallback<{ post: WPPropertyNode | null }>(cacheKey, query, {
+        slug,
+      });
 
       return result.post;
     } catch (error) {
@@ -196,11 +190,9 @@ export class WordPressClient {
         }
       `;
 
-      const result = await this.fireWithFallback<{ post: WPPropertyNode | null }>(
-        cacheKey,
-        query,
-        { wpId },
-      );
+      const result = await this.fireWithFallback<{ post: WPPropertyNode | null }>(cacheKey, query, {
+        wpId,
+      });
 
       return result.post;
     } catch (error) {
@@ -254,11 +246,11 @@ export class WordPressClient {
     variables?: Record<string, unknown>,
   ): Promise<T> {
     try {
-      const result = await this.breaker.fire(query, variables) as T;
+      const result = (await this.breaker.fire(query, variables)) as T;
 
       // Store successful result in cache
       await this.cacheService.set(cacheKey, result, {
-        staleTtl: 5 * 60,   // 5 minutes
+        staleTtl: 5 * 60, // 5 minutes
         expireTtl: 15 * 60, // 15 minutes
       });
 

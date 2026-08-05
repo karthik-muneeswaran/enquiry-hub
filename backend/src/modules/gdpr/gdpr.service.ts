@@ -32,10 +32,7 @@ export class GdprService {
    * Export all data associated with an email address with cursor pagination.
    * Supports filtering by entity type (enquiry, audit, or all).
    */
-  async exportData(
-    email: string,
-    query: GdprExportQueryDto,
-  ): Promise<PaginatedResult<GdprRecord>> {
+  async exportData(email: string, query: GdprExportQueryDto): Promise<PaginatedResult<GdprRecord>> {
     const { cursor, limit = 50, entity = 'all' } = query;
     const decodedCursor = cursor ? this.decodeCursor(cursor) : null;
 
@@ -229,10 +226,7 @@ export class GdprService {
       const cursorDate = new Date(cursor.createdAt);
       where.AND = [
         {
-          OR: [
-            { createdAt: { lt: cursorDate } },
-            { createdAt: cursorDate, id: { lt: cursor.id } },
-          ],
+          OR: [{ createdAt: { lt: cursorDate } }, { createdAt: cursorDate, id: { lt: cursor.id } }],
         },
       ];
     }

@@ -1,12 +1,7 @@
-import {
-  Injectable,
-  NestInterceptor,
-  ExecutionContext,
-  CallHandler,
-} from '@nestjs/common';
+import { Injectable, NestInterceptor, ExecutionContext, CallHandler } from '@nestjs/common';
 import { Observable } from 'rxjs';
 import { randomUUID } from 'crypto';
-import { Request, Response } from 'express';
+import { Request } from 'express';
 import { getRequestFromContext, getResponseFromContext } from '@common/utils';
 
 @Injectable()
@@ -19,8 +14,7 @@ export class RequestIdInterceptor implements NestInterceptor {
       return next.handle();
     }
 
-    const requestId =
-      (request.headers['x-request-id'] as string) || randomUUID();
+    const requestId = (request.headers['x-request-id'] as string) || randomUUID();
 
     // Attach to the request object for downstream usage
     (request as Request & { id: string }).id = requestId;

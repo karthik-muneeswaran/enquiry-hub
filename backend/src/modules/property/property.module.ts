@@ -7,12 +7,7 @@ import { AppConfigModule } from '@config/config.module';
 
 @Module({
   imports: [AppConfigModule],
-  providers: [
-    WordPressClient,
-    PropertyResolver,
-    PropertyService,
-    PropertyCacheService,
-  ],
+  providers: [WordPressClient, PropertyResolver, PropertyService, PropertyCacheService],
   exports: [WordPressClient, PropertyService, PropertyCacheService],
 })
 export class PropertyModule {}

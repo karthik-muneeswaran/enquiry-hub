@@ -84,9 +84,7 @@ export class PropertySyncJob extends WorkerHost implements OnModuleInit {
         await this.propertyRepository.upsertBatch(upsertData);
       }
 
-      this.logger.log(
-        `Synced ${allProperties.length} properties in ${batches.length} batch(es)`,
-      );
+      this.logger.log(`Synced ${allProperties.length} properties in ${batches.length} batch(es)`);
     } catch (error) {
       this.logger.error(
         `Property sync failed: ${(error as Error).message}`,
@@ -100,10 +98,14 @@ export class PropertySyncJob extends WorkerHost implements OnModuleInit {
    * Trigger an immediate sync by adding a one-off job to the queue.
    */
   async triggerImmediateSync(): Promise<void> {
-    await this.syncQueue.add('sync-properties-immediate', {}, {
-      removeOnComplete: { age: 60 * 60, count: 10 },
-      removeOnFail: { age: 24 * 60 * 60, count: 50 },
-    });
+    await this.syncQueue.add(
+      'sync-properties-immediate',
+      {},
+      {
+        removeOnComplete: { age: 60 * 60, count: 10 },
+        removeOnFail: { age: 24 * 60 * 60, count: 50 },
+      },
+    );
     this.logger.log('Immediate property sync triggered');
   }
 

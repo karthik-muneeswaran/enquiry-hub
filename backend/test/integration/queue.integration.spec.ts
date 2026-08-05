@@ -1,7 +1,7 @@
 import { INestApplication } from '@nestjs/common';
 import { TestingModule } from '@nestjs/testing';
 import { getQueueToken } from '@nestjs/bullmq';
-import { Queue, Job } from 'bullmq';
+import { Queue } from 'bullmq';
 import request from 'supertest';
 import * as crypto from 'crypto';
 import { PrismaService } from '@/database/prisma.service';
@@ -108,9 +108,7 @@ describe('Queue Integration Tests', () => {
 
   describe('Admin queue operations', () => {
     it('should report queue statistics via admin endpoint', async () => {
-      const response = await request(app.getHttpServer())
-        .get('/admin/queues/stats')
-        .expect(200);
+      const response = await request(app.getHttpServer()).get('/admin/queues/stats').expect(200);
 
       expect(response.body).toBeDefined();
     });

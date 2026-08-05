@@ -88,11 +88,7 @@ describe('EnquiryService', () => {
 
       await service.create(validDto);
 
-      expect(mockRepository.findDuplicate).toHaveBeenCalledWith(
-        'john@example.com',
-        'prop-123',
-        10,
-      );
+      expect(mockRepository.findDuplicate).toHaveBeenCalledWith('john@example.com', 'prop-123', 10);
     });
 
     it('should throw ConflictException for duplicate enquiry', async () => {
@@ -102,7 +98,11 @@ describe('EnquiryService', () => {
     });
 
     it('should return cached response for duplicate idempotency key', async () => {
-      const cachedEnquiry = { ...mockEnquiry, createdAt: mockEnquiry.createdAt.toISOString(), updatedAt: mockEnquiry.updatedAt.toISOString() };
+      const cachedEnquiry = {
+        ...mockEnquiry,
+        createdAt: mockEnquiry.createdAt.toISOString(),
+        updatedAt: mockEnquiry.updatedAt.toISOString(),
+      };
       mockRedis.get.mockResolvedValue(JSON.stringify(cachedEnquiry));
 
       const result = await service.create(validDto, 'idem-key-1');
@@ -143,9 +143,7 @@ describe('EnquiryService', () => {
 
     it('should not fail if notification enqueue throws', async () => {
       mockRepository.findDuplicate.mockResolvedValue(null);
-      mockNotificationProducer.enqueueConfirmationEmail.mockRejectedValue(
-        new Error('Queue down'),
-      );
+      mockNotificationProducer.enqueueConfirmationEmail.mockRejectedValue(new Error('Queue down'));
 
       const result = await service.create(validDto);
 
@@ -190,9 +188,7 @@ describe('EnquiryService', () => {
     it('should throw NotFoundException when enquiry not found', async () => {
       mockRepository.findById.mockResolvedValue(null);
 
-      await expect(service.findById('non-existent')).rejects.toThrow(
-        NotFoundException,
-      );
+      await expect(service.findById('non-existent')).rejects.toThrow(NotFoundException);
     });
   });
 

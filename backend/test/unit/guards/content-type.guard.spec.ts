@@ -28,12 +28,18 @@ describe('ContentTypeGuard', () => {
   }
 
   it('should allow GET requests regardless of content-type', () => {
-    const context = createMockContext('GET', { 'content-type': 'text/html', 'content-length': '10' });
+    const context = createMockContext('GET', {
+      'content-type': 'text/html',
+      'content-length': '10',
+    });
     expect(guard.canActivate(context)).toBe(true);
   });
 
   it('should allow DELETE requests regardless of content-type', () => {
-    const context = createMockContext('DELETE', { 'content-type': 'text/html', 'content-length': '10' });
+    const context = createMockContext('DELETE', {
+      'content-type': 'text/html',
+      'content-length': '10',
+    });
     expect(guard.canActivate(context)).toBe(true);
   });
 

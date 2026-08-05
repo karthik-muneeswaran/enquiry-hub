@@ -20,9 +20,7 @@ export class PushWorker extends WorkerHost {
 
     // Validate required data — permanent failure if missing
     if (!recipients || !Array.isArray(recipients) || recipients.length === 0) {
-      throw new UnrecoverableError(
-        'Missing or empty recipients array for push notification',
-      );
+      throw new UnrecoverableError('Missing or empty recipients array for push notification');
     }
 
     if (!title || !body) {

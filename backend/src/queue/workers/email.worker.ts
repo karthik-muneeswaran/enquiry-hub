@@ -48,27 +48,19 @@ export class EmailWorker extends WorkerHost {
 
     // Validate required data — permanent failure if missing
     if (!type || !enquiryId) {
-      throw new UnrecoverableError(
-        'Missing required job data: type and enquiryId are required',
-      );
+      throw new UnrecoverableError('Missing required job data: type and enquiryId are required');
     }
 
     if (type === 'confirmation' && !to) {
-      throw new UnrecoverableError(
-        'Missing required field "to" for confirmation email',
-      );
+      throw new UnrecoverableError('Missing required field "to" for confirmation email');
     }
 
     if (type === 'confirmation' && to && !this.isValidEmail(to)) {
-      throw new UnrecoverableError(
-        `Invalid email format: ${to}`,
-      );
+      throw new UnrecoverableError(`Invalid email format: ${to}`);
     }
 
     if (type === 'admin-notification' && email && !this.isValidEmail(email)) {
-      throw new UnrecoverableError(
-        `Invalid email format for admin notification: ${email}`,
-      );
+      throw new UnrecoverableError(`Invalid email format for admin notification: ${email}`);
     }
 
     // Render the email content
@@ -84,15 +76,11 @@ export class EmailWorker extends WorkerHost {
 
     try {
       await this.smtpBreaker.fire(recipient, subject, body);
-      this.logger.log(
-        `Email sent successfully: type=${type}, enquiryId=${enquiryId}`,
-      );
+      this.logger.log(`Email sent successfully: type=${type}, enquiryId=${enquiryId}`);
     } catch (error) {
       if (this.smtpBreaker.opened) {
         // Circuit is open — throw so BullMQ retries the job later
-        throw new Error(
-          'SMTP circuit breaker is OPEN — job will be retried after reset timeout',
-        );
+        throw new Error('SMTP circuit breaker is OPEN — job will be retried after reset timeout');
       }
       // Re-throw for BullMQ retry handling
       throw error;
@@ -103,15 +91,9 @@ export class EmailWorker extends WorkerHost {
    * The actual SMTP send function wrapped by the circuit breaker.
    * In development mode, logs the email instead of sending.
    */
-  private async sendEmail(
-    to: string,
-    subject: string,
-    body: string,
-  ): Promise<void> {
+  private async sendEmail(to: string, subject: string, body: string): Promise<void> {
     if (process.env.NODE_ENV === 'development') {
-      this.logger.log(
-        `[DEV] Email to: ${to}\n  Subject: ${subject}\n  Body: ${body}`,
-      );
+      this.logger.log(`[DEV] Email to: ${to}\n  Subject: ${subject}\n  Body: ${body}`);
       return;
     }
 

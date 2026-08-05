@@ -1,9 +1,4 @@
-import {
-  IsNotEmpty,
-  IsString,
-  IsObject,
-  IsOptional,
-} from 'class-validator';
+import { IsNotEmpty, IsString, IsObject, IsOptional } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class WebhookPayloadDto {

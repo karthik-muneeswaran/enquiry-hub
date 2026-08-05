@@ -2,7 +2,7 @@ import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { WordPressClient, WPPropertyNode } from './wordpress.client';
 import { PropertyCacheService } from './property-cache.service';
 import { PropertyConnectionArgs } from './dto/property-connection.args';
-import { PropertyConnection, PropertyEdge, PageInfo } from './models';
+import { PropertyConnection, PropertyEdge } from './models';
 
 @Injectable()
 export class PropertyService {

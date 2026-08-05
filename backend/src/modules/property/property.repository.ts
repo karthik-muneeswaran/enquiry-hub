@@ -70,9 +70,7 @@ export class PropertyRepository {
     const resultItems = hasNextPage ? items.slice(0, first) : items;
 
     const endCursor =
-      resultItems.length > 0
-        ? this.encodeCursor(resultItems[resultItems.length - 1])
-        : null;
+      resultItems.length > 0 ? this.encodeCursor(resultItems[resultItems.length - 1]) : null;
 
     return { items: resultItems, hasNextPage, endCursor };
   }

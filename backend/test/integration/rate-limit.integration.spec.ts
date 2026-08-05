@@ -102,9 +102,7 @@ describe('Rate Limit Integration Tests', () => {
   describe('GET /api/v1/enquiries rate limiting (60/min per IP)', () => {
     it('should allow higher rate for GET list endpoint', async () => {
       // GET /enquiries has a 60/min limit — much more lenient
-      const response = await request(app.getHttpServer())
-        .get('/api/v1/enquiries')
-        .expect(200);
+      const response = await request(app.getHttpServer()).get('/api/v1/enquiries').expect(200);
 
       const limit = parseInt(response.headers['x-ratelimit-limit'], 10);
       // The limit for GET enquiries should be 60

@@ -25,9 +25,7 @@ export interface CacheEntry<T> {
 }
 
 export type SWRResult<T> =
-  | { status: 'fresh'; data: T }
-  | { status: 'stale'; data: T }
-  | { status: 'miss'; data: null };
+  { status: 'fresh'; data: T } | { status: 'stale'; data: T } | { status: 'miss'; data: null };
 
 export interface CacheOperation {
   type: 'get' | 'set' | 'del';
@@ -43,9 +41,7 @@ export class CacheService implements OnModuleInit, OnModuleDestroy {
   private redisHealthy = false;
   private healthCheckInterval: NodeJS.Timeout | null = null;
 
-  constructor(
-    @Inject(REDIS_CLIENT) private readonly redis: Redis,
-  ) {}
+  constructor(@Inject(REDIS_CLIENT) private readonly redis: Redis) {}
 
   onModuleInit(): void {
     this.setupRedisEventListeners();
@@ -77,7 +73,10 @@ export class CacheService implements OnModuleInit, OnModuleDestroy {
       const entry: CacheEntry<T> = JSON.parse(raw);
       return entry.data;
     } catch (error) {
-      this.logger.warn(`Redis GET failed for key "${key}", falling back to in-memory`, (error as Error).message);
+      this.logger.warn(
+        `Redis GET failed for key "${key}", falling back to in-memory`,
+        (error as Error).message,
+      );
       this.handleRedisFailure();
       return this.fallbackCache.get<T>(key);
     }
@@ -116,7 +115,10 @@ export class CacheService implements OnModuleInit, OnModuleDestroy {
       // Expired — treat as a miss
       return { status: 'miss', data: null };
     } catch (error) {
-      this.logger.warn(`Redis GET (SWR) failed for key "${key}", falling back to in-memory`, (error as Error).message);
+      this.logger.warn(
+        `Redis GET (SWR) failed for key "${key}", falling back to in-memory`,
+        (error as Error).message,
+      );
       this.handleRedisFailure();
       const data = this.fallbackCache.get<T>(key);
       return data !== null ? { status: 'fresh', data } : { status: 'miss', data: null };
@@ -170,11 +172,12 @@ export class CacheService implements OnModuleInit, OnModuleDestroy {
     }
 
     try {
-      await this.withTimeout(
-        this.redis.set(key, JSON.stringify(entry), 'EX', expireTtl),
-      );
+      await this.withTimeout(this.redis.set(key, JSON.stringify(entry), 'EX', expireTtl));
     } catch (error) {
-      this.logger.warn(`Redis SET failed for key "${key}", falling back to in-memory`, (error as Error).message);
+      this.logger.warn(
+        `Redis SET failed for key "${key}", falling back to in-memory`,
+        (error as Error).message,
+      );
       this.handleRedisFailure();
       this.fallbackCache.set(key, value, 60);
     }
@@ -276,7 +279,10 @@ export class CacheService implements OnModuleInit, OnModuleDestroy {
 
       await this.withTimeout(pipe.exec());
     } catch (error) {
-      this.logger.warn('Redis pipeline failed, falling back to in-memory', (error as Error).message);
+      this.logger.warn(
+        'Redis pipeline failed, falling back to in-memory',
+        (error as Error).message,
+      );
       this.handleRedisFailure();
 
       // Fallback: execute against in-memory cache
@@ -349,9 +355,7 @@ export class CacheService implements OnModuleInit, OnModuleDestroy {
       return 0
     `;
     try {
-      await this.withTimeout(
-        this.redis.eval(script, 1, `lock:${key}`, token),
-      );
+      await this.withTimeout(this.redis.eval(script, 1, `lock:${key}`, token));
     } catch (error) {
       this.logger.warn(`Failed to release lock "${key}"`, (error as Error).message);
     }
@@ -379,7 +383,10 @@ export class CacheService implements OnModuleInit, OnModuleDestroy {
       case 'stale':
         // Serve stale immediately, trigger mutex-protected background refresh
         this.refreshWithLock(key, refreshFn, lockTtlMs, options).catch((err) => {
-          this.logger.warn(`Background refresh with lock failed for "${key}"`, (err as Error).message);
+          this.logger.warn(
+            `Background refresh with lock failed for "${key}"`,
+            (err as Error).message,
+          );
         });
         return result.data;
 
@@ -428,9 +435,7 @@ export class CacheService implements OnModuleInit, OnModuleDestroy {
       // Keep the existing TTL
       const ttl = await this.withTimeout(this.redis.ttl(key));
       if (ttl > 0) {
-        await this.withTimeout(
-          this.redis.set(key, JSON.stringify(entry), 'EX', ttl),
-        );
+        await this.withTimeout(this.redis.set(key, JSON.stringify(entry), 'EX', ttl));
       }
     } catch (error) {
       this.logger.warn(`Failed to mark key "${key}" as stale`, (error as Error).message);

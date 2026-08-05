@@ -13,5 +13,4 @@ export const RATE_LIMIT_KEY = 'rateLimit';
  * The RateLimitGuard reads this metadata at runtime and applies the
  * sliding-window algorithm per scope.
  */
-export const RateLimit = (config: RateLimitConfig) =>
-  SetMetadata(RATE_LIMIT_KEY, config);
+export const RateLimit = (config: RateLimitConfig) => SetMetadata(RATE_LIMIT_KEY, config);

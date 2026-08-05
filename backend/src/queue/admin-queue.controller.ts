@@ -1,6 +1,6 @@
 import { Controller, Post, Param, Logger, NotFoundException } from '@nestjs/common';
 import { InjectQueue } from '@nestjs/bullmq';
-import { Queue, Job } from 'bullmq';
+import { Queue } from 'bullmq';
 import { Prisma, WebhookStatus } from '@prisma/client';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
 import { PrismaService } from '@database/prisma.service';
@@ -40,9 +40,7 @@ export class AdminQueueController {
     // Find the failed job in the queue
     const job = await queue.getJob(jobId);
     if (!job) {
-      throw new NotFoundException(
-        `Job "${jobId}" not found in queue "${name}"`,
-      );
+      throw new NotFoundException(`Job "${jobId}" not found in queue "${name}"`);
     }
 
     const jobData = job.data;
@@ -67,21 +65,20 @@ export class AdminQueueController {
               entityId: jobData.webhookEventId,
               action: 'UPDATE',
               before: { status: WebhookStatus.DEAD_LETTER } as unknown as Prisma.InputJsonValue,
-              after: { status: WebhookStatus.RECEIVED, action: 'DLQ_RETRY' } as unknown as Prisma.InputJsonValue,
+              after: {
+                status: WebhookStatus.RECEIVED,
+                action: 'DLQ_RETRY',
+              } as unknown as Prisma.InputJsonValue,
               performedBy: 'admin',
               requestId: `dlq-retry-${jobId}`,
             },
           });
 
           // Re-enqueue with fresh retry options
-          const enqueuedJob = await this.crmQueue.add(
-            'process-webhook',
-            jobData,
-            {
-              ...DEFAULT_JOB_OPTIONS,
-              jobId: `crm-retry-${jobData.eventId}-${Date.now()}`,
-            },
-          );
+          const enqueuedJob = await this.crmQueue.add('process-webhook', jobData, {
+            ...DEFAULT_JOB_OPTIONS,
+            jobId: `crm-retry-${jobData.eventId}-${Date.now()}`,
+          });
 
           return enqueuedJob;
         },

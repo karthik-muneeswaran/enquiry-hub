@@ -51,7 +51,11 @@ export class HealthService {
       if (result === 'PONG') {
         return { status: 'up', latencyMs: Date.now() - start };
       }
-      return { status: 'down', latencyMs: Date.now() - start, error: `Unexpected ping response: ${result}` };
+      return {
+        status: 'down',
+        latencyMs: Date.now() - start,
+        error: `Unexpected ping response: ${result}`,
+      };
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown error';
       this.logger.error(`Redis health check failed: ${message}`);
@@ -64,10 +68,7 @@ export class HealthService {
    * Returns overall 'healthy' only if all components are up.
    */
   async checkAll(): Promise<HealthCheckResult> {
-    const [postgres, redis] = await Promise.all([
-      this.checkPostgres(),
-      this.checkRedis(),
-    ]);
+    const [postgres, redis] = await Promise.all([this.checkPostgres(), this.checkRedis()]);
 
     const allUp = postgres.status === 'up' && redis.status === 'up';
 

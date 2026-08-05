@@ -11,14 +11,7 @@ import {
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
-import {
-  ApiTags,
-  ApiOperation,
-  ApiResponse,
-  ApiHeader,
-  ApiQuery,
-  ApiParam,
-} from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiHeader, ApiQuery, ApiParam } from '@nestjs/swagger';
 import { EnquiryStatus } from '@prisma/client';
 import { RateLimit } from '@common/decorators';
 import { ETagInterceptor } from '@common/interceptors/etag.interceptor';
@@ -46,7 +39,8 @@ export class EnquiryController {
   @ApiHeader({
     name: 'Idempotency-Key',
     required: false,
-    description: 'UUID for idempotent submission — repeated requests with the same key return the original response',
+    description:
+      'UUID for idempotent submission — repeated requests with the same key return the original response',
   })
   @ApiResponse({
     status: 201,
@@ -65,10 +59,7 @@ export class EnquiryController {
     status: 429,
     description: 'Rate limit exceeded',
   })
-  async create(
-    @Body() dto: CreateEnquiryDto,
-    @Headers('idempotency-key') idempotencyKey?: string,
-  ) {
+  async create(@Body() dto: CreateEnquiryDto, @Headers('idempotency-key') idempotencyKey?: string) {
     return this.enquiryService.create(dto, idempotencyKey);
   }
 
@@ -108,13 +99,48 @@ export class EnquiryController {
   @RateLimit({ limit: 60, window: 60, scope: 'ip' })
   @ApiOperation({ summary: 'List enquiries with cursor pagination and filtering' })
   @ApiQuery({ name: 'cursor', required: false, description: 'Pagination cursor (opaque token)' })
-  @ApiQuery({ name: 'limit', required: false, type: Number, description: 'Page size (1-100, default 20)' })
-  @ApiQuery({ name: 'status', required: false, enum: EnquiryStatus, description: 'Filter by enquiry status' })
-  @ApiQuery({ name: 'dateFrom', required: false, type: String, description: 'Filter records created on or after this date (ISO 8601)' })
-  @ApiQuery({ name: 'dateTo', required: false, type: String, description: 'Filter records created on or before this date (ISO 8601)' })
-  @ApiQuery({ name: 'search', required: false, type: String, description: 'Search in name, email, message' })
-  @ApiQuery({ name: 'sortBy', required: false, enum: ['createdAt', 'updatedAt', 'name', 'email'], description: 'Field to sort by (default: createdAt)' })
-  @ApiQuery({ name: 'sortDir', required: false, enum: ['asc', 'desc'], description: 'Sort direction (default: desc)' })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    type: Number,
+    description: 'Page size (1-100, default 20)',
+  })
+  @ApiQuery({
+    name: 'status',
+    required: false,
+    enum: EnquiryStatus,
+    description: 'Filter by enquiry status',
+  })
+  @ApiQuery({
+    name: 'dateFrom',
+    required: false,
+    type: String,
+    description: 'Filter records created on or after this date (ISO 8601)',
+  })
+  @ApiQuery({
+    name: 'dateTo',
+    required: false,
+    type: String,
+    description: 'Filter records created on or before this date (ISO 8601)',
+  })
+  @ApiQuery({
+    name: 'search',
+    required: false,
+    type: String,
+    description: 'Search in name, email, message',
+  })
+  @ApiQuery({
+    name: 'sortBy',
+    required: false,
+    enum: ['createdAt', 'updatedAt', 'name', 'email'],
+    description: 'Field to sort by (default: createdAt)',
+  })
+  @ApiQuery({
+    name: 'sortDir',
+    required: false,
+    enum: ['asc', 'desc'],
+    description: 'Sort direction (default: desc)',
+  })
   @ApiResponse({
     status: 200,
     description: 'Paginated list of enquiries',

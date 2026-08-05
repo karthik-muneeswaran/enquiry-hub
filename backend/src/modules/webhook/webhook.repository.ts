@@ -55,15 +55,8 @@ export class WebhookRepository {
     });
   }
 
-  async findWithCursor(
-    params: ListWebhookEventsDto,
-  ): Promise<PaginatedResult<WebhookEvent>> {
-    const {
-      cursor,
-      limit = 20,
-      sortDir = 'desc',
-      sortBy = 'createdAt',
-    } = params;
+  async findWithCursor(params: ListWebhookEventsDto): Promise<PaginatedResult<WebhookEvent>> {
+    const { cursor, limit = 20, sortDir = 'desc', sortBy = 'createdAt' } = params;
 
     // Build filter conditions (without cursor)
     const filterConditions = this.buildFilterConditions(params);
@@ -80,12 +73,10 @@ export class WebhookRepository {
       conditions.push(cursorCondition);
     }
 
-    const where: Prisma.WebhookEventWhereInput =
-      conditions.length > 0 ? { AND: conditions } : {};
+    const where: Prisma.WebhookEventWhereInput = conditions.length > 0 ? { AND: conditions } : {};
 
     // Get total count using only filter conditions (no cursor)
-    const countWhere =
-      Object.keys(filterConditions).length > 0 ? filterConditions : {};
+    const countWhere = Object.keys(filterConditions).length > 0 ? filterConditions : {};
     const totalCount = await this.prisma.webhookEvent.count({
       where: countWhere,
     });
@@ -127,9 +118,7 @@ export class WebhookRepository {
     };
   }
 
-  private buildFilterConditions(
-    params: ListWebhookEventsDto,
-  ): Prisma.WebhookEventWhereInput {
+  private buildFilterConditions(params: ListWebhookEventsDto): Prisma.WebhookEventWhereInput {
     const { search, dateFrom, dateTo, status, type, source } = params;
     const conditions: Prisma.WebhookEventWhereInput[] = [];
 

@@ -55,12 +55,7 @@ export class EnquiryRepository {
   }
 
   async findWithCursor(params: ListEnquiriesDto): Promise<PaginatedResult<Enquiry>> {
-    const {
-      cursor,
-      limit = 20,
-      sortDir = 'desc',
-      sortBy = 'createdAt',
-    } = params;
+    const { cursor, limit = 20, sortDir = 'desc', sortBy = 'createdAt' } = params;
 
     // Build filter conditions (without cursor)
     const filterConditions = this.buildFilterConditions(params);
@@ -77,12 +72,10 @@ export class EnquiryRepository {
       conditions.push(cursorCondition);
     }
 
-    const where: Prisma.EnquiryWhereInput =
-      conditions.length > 0 ? { AND: conditions } : {};
+    const where: Prisma.EnquiryWhereInput = conditions.length > 0 ? { AND: conditions } : {};
 
     // Get total count using only filter conditions (no cursor)
-    const countWhere =
-      Object.keys(filterConditions).length > 0 ? filterConditions : {};
+    const countWhere = Object.keys(filterConditions).length > 0 ? filterConditions : {};
     const totalCount = await this.prisma.enquiry.count({ where: countWhere });
 
     // Fetch limit + 1 to detect hasMore
@@ -122,9 +115,7 @@ export class EnquiryRepository {
     };
   }
 
-  private buildFilterConditions(
-    params: ListEnquiriesDto,
-  ): Prisma.EnquiryWhereInput {
+  private buildFilterConditions(params: ListEnquiriesDto): Prisma.EnquiryWhereInput {
     const { search, dateFrom, dateTo, status } = params;
     const conditions: Prisma.EnquiryWhereInput[] = [];
 

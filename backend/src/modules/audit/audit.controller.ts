@@ -1,10 +1,5 @@
 import { Controller, Get, Query } from '@nestjs/common';
-import {
-  ApiTags,
-  ApiOperation,
-  ApiResponse,
-  ApiQuery,
-} from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiQuery } from '@nestjs/swagger';
 import { RateLimit } from '@common/decorators';
 import { AuditService } from './audit.service';
 import { ListAuditLogsDto, PaginatedAuditLogResponseDto } from './dto';

@@ -7,13 +7,13 @@ import { PaginatedResult } from './enquiry.repository';
 
 /** Cache TTL configuration for enquiry data */
 const ENQUIRY_BY_ID_OPTIONS: CacheOptions = {
-  staleTtl: 5 * 60,   // 5 minutes before considered stale
+  staleTtl: 5 * 60, // 5 minutes before considered stale
   expireTtl: 15 * 60, // 15 minutes hard expiry
 };
 
 const ENQUIRY_LIST_OPTIONS: CacheOptions = {
-  staleTtl: 30,        // 30 seconds before list is stale
-  expireTtl: 2 * 60,  // 2 minutes hard expiry (lists change more often)
+  staleTtl: 30, // 30 seconds before list is stale
+  expireTtl: 2 * 60, // 2 minutes hard expiry (lists change more often)
 };
 
 const ENQUIRY_DUP_TTL_SECONDS = 10 * 60; // 10 minutes (matches duplicate window)
@@ -36,17 +36,14 @@ export class EnquiryCacheService {
    * Get a single enquiry by ID from cache, or fetch from DB if miss/stale.
    * Uses mutex lock so only ONE request hits DB on concurrent misses.
    */
-  async getById(
-    id: string,
-    fetchFn: () => Promise<Enquiry | null>,
-  ): Promise<Enquiry | null> {
+  async getById(id: string, fetchFn: () => Promise<Enquiry | null>): Promise<Enquiry | null> {
     const key = `${KEY_BY_ID}:${id}`;
 
-    return this.cacheService.getOrRefreshWithLock<Enquiry | null>(
-      key,
-      fetchFn,
-      { ...ENQUIRY_BY_ID_OPTIONS, lockTtlMs: 3000, waitTimeoutMs: 2000 },
-    );
+    return this.cacheService.getOrRefreshWithLock<Enquiry | null>(key, fetchFn, {
+      ...ENQUIRY_BY_ID_OPTIONS,
+      lockTtlMs: 3000,
+      waitTimeoutMs: 2000,
+    });
   }
 
   // ─── READ: Get list (with mutex stampede protection) ─────────────────
@@ -61,11 +58,11 @@ export class EnquiryCacheService {
   ): Promise<PaginatedResult<Enquiry>> {
     const key = this.listKey(params);
 
-    return this.cacheService.getOrRefreshWithLock<PaginatedResult<Enquiry>>(
-      key,
-      fetchFn,
-      { ...ENQUIRY_LIST_OPTIONS, lockTtlMs: 5000, waitTimeoutMs: 3000 },
-    );
+    return this.cacheService.getOrRefreshWithLock<PaginatedResult<Enquiry>>(key, fetchFn, {
+      ...ENQUIRY_LIST_OPTIONS,
+      lockTtlMs: 5000,
+      waitTimeoutMs: 3000,
+    });
   }
 
   // ─── READ: Duplicate check ──────────────────────────────────────────
@@ -102,11 +99,7 @@ export class EnquiryCacheService {
    */
   async onEnquiryCreated(enquiry: Enquiry): Promise<void> {
     // Write-through: cache the new record immediately
-    await this.cacheService.set(
-      `${KEY_BY_ID}:${enquiry.id}`,
-      enquiry,
-      ENQUIRY_BY_ID_OPTIONS,
-    );
+    await this.cacheService.set(`${KEY_BY_ID}:${enquiry.id}`, enquiry, ENQUIRY_BY_ID_OPTIONS);
 
     // Mark all list caches stale (they'll serve stale + refresh in background)
     await this.cacheService.markStaleByPattern(`${KEY_LIST}:*`);
@@ -123,11 +116,7 @@ export class EnquiryCacheService {
    * - Marks list caches stale
    */
   async onEnquiryUpdated(enquiry: Enquiry): Promise<void> {
-    await this.cacheService.set(
-      `${KEY_BY_ID}:${enquiry.id}`,
-      enquiry,
-      ENQUIRY_BY_ID_OPTIONS,
-    );
+    await this.cacheService.set(`${KEY_BY_ID}:${enquiry.id}`, enquiry, ENQUIRY_BY_ID_OPTIONS);
 
     await this.cacheService.markStaleByPattern(`${KEY_LIST}:*`);
 

@@ -40,12 +40,8 @@ export default async function globalSetup(): Promise<void> {
     });
     console.log('✓ Database schema synchronized');
   } catch (error) {
-    console.error(
-      '✗ Database setup failed. Ensure PostgreSQL is running via Docker Compose.',
-    );
-    console.error(
-      '  Run: docker compose up -d postgres redis',
-    );
+    console.error('✗ Database setup failed. Ensure PostgreSQL is running via Docker Compose.');
+    console.error('  Run: docker compose up -d postgres redis');
     throw error;
   }
 

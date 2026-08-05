@@ -51,7 +51,9 @@ export function createCircuitBreaker<TArgs extends unknown[], TResult>(
 
   // Log state transitions
   breaker.on('open', () => {
-    logger.warn(`Circuit OPEN — requests will be short-circuited for ${mergedOptions.resetTimeout}ms`);
+    logger.warn(
+      `Circuit OPEN — requests will be short-circuited for ${mergedOptions.resetTimeout}ms`,
+    );
   });
 
   breaker.on('halfOpen', () => {

@@ -9,9 +9,11 @@ describe('RequestIdInterceptor', () => {
     interceptor = new RequestIdInterceptor();
   });
 
-  function createMockContext(
-    headers: Record<string, string> = {},
-  ): { context: ExecutionContext; request: any; response: any } {
+  function createMockContext(headers: Record<string, string> = {}): {
+    context: ExecutionContext;
+    request: any;
+    response: any;
+  } {
     const request: any = { headers };
     const response: any = { setHeader: jest.fn() };
 
@@ -34,9 +36,7 @@ describe('RequestIdInterceptor', () => {
     await lastValueFrom(interceptor.intercept(context, mockHandler));
 
     expect(request.id).toBeDefined();
-    expect(request.id).toMatch(
-      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/,
-    );
+    expect(request.id).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/);
   });
 
   it('should use provided X-Request-Id header if present', async () => {
@@ -70,9 +70,7 @@ describe('RequestIdInterceptor', () => {
   it('should proceed with handler and return its output', async () => {
     const { context } = createMockContext();
 
-    const result = await lastValueFrom(
-      interceptor.intercept(context, mockHandler),
-    );
+    const result = await lastValueFrom(interceptor.intercept(context, mockHandler));
 
     expect(result).toBe('result');
   });
