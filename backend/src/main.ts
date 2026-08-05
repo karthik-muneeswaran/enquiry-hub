@@ -71,7 +71,9 @@ async function bootstrap() {
       .addTag('Admin', 'Queue management and dashboard')
       .build();
 
-    const document = SwaggerModule.createDocument(app, swaggerConfig);
+    const document = SwaggerModule.createDocument(app, swaggerConfig, {
+      ignoreGlobalPrefix: false,
+    });
 
     // Ensure Swagger UI "Try it out" uses the correct base URL
     document.servers = [{ url: '/' }];
