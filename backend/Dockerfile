@@ -33,7 +33,9 @@ RUN npx prisma generate
 # Stage 5: Production
 FROM node:24-alpine AS production
 RUN apk add --no-cache openssl libc6-compat
-RUN npm install -g pm2
+RUN npm install -g pm2 && \
+    npm cache clean --force && \
+    rm -rf /usr/local/lib/node_modules/npm
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 WORKDIR /app
 

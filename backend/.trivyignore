@@ -1,10 +1,11 @@
-# OpenTelemetry auto-instrumentations vulnerability (Prometheus exporter crash via malformed HTTP request)
-# Cannot fix without upgrading to OTel SDK v2 which requires NestJS 11+
-# Risk: DoS only on the metrics endpoint, not on the main API
-# Tracked: https://github.com/advisories/GHSA-q7rr-3cgh-j5r3
-GHSA-q7rr-3cgh-j5r3
+# OpenTelemetry vulnerabilities - require OTel SDK v2 / NestJS 11 migration
+# All are DoS-only (no data leak or RCE), affecting metrics/tracing endpoints
 
-# OpenTelemetry instrumentation-amqplib vulnerability
-# Transitive dep of @opentelemetry/auto-instrumentations-node, same SDK v2 upgrade blocker
-# Tracked: https://github.com/advisories/GHSA-45rx-2jwx-cxfr
-GHSA-45rx-2jwx-cxfr
+# Prometheus exporter DoS via malformed HTTP request
+# Affects: @opentelemetry/auto-instrumentations-node, exporter-prometheus, sdk-node
+# Fix requires: >= 0.217.0 (SDK v2 only)
+CVE-2026-44902
+
+# Propagator-jaeger DoS via malformed HTTP header decoding
+# Fix requires: >= 2.9.0 (SDK v2 only)
+CVE-2026-59892
