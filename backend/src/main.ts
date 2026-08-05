@@ -46,6 +46,7 @@ async function bootstrap() {
   app.setGlobalPrefix('api', {
     exclude: [
       { path: 'health/(.*)', method: 0 }, // RequestMethod.GET = 0
+      { path: 'api/docs(.*)', method: 0 }, // Swagger UI
     ],
   });
 
@@ -83,7 +84,7 @@ async function bootstrap() {
   });
 
   // Swagger setup (conditional on environment)
-  const swaggerEnabled = configService.get<boolean>('SWAGGER_ENABLED', true);
+  const swaggerEnabled = configService.get<string>('SWAGGER_ENABLED', 'true') !== 'false';
   if (swaggerEnabled) {
     const config = new DocumentBuilder()
       .setTitle('Enquiry Backend Platform')
@@ -100,7 +101,6 @@ async function bootstrap() {
 
     const document = SwaggerModule.createDocument(app, config);
     SwaggerModule.setup('api/docs', app, document, {
-      useGlobalPrefix: false,
       swaggerOptions: {
         persistAuthorization: true,
         tagsSorterAlpha: true,
