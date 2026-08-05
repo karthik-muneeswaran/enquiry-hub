@@ -115,22 +115,22 @@ docker compose ps
 
 ```bash
 # Unit tests (fast, no infrastructure needed)
-docker compose exec app npm run test:unit
+docker compose exec backend npm run test:unit
 
 # Integration tests (requires Postgres + Redis)
-docker compose exec app npm run test:integration
+docker compose exec backend npm run test:integration
 
 # Regression/security tests (requires running app)
-docker compose exec app npm run test:regression
+docker compose exec backend npm run test:regression
 
 # Smoke tests (quick sanity check)
-docker compose exec app npm run test:smoke
+docker compose exec backend npm run test:smoke
 
 # All tests with coverage report
-docker compose exec app npm run test:coverage
+docker compose exec backend npm run test:coverage
 
 # Watch mode during development
-docker compose exec app npm run test:watch
+docker compose exec backend npm run test:watch
 ```
 
 ### Frontend Commands
@@ -184,8 +184,8 @@ docker run --rm -i --network host grafana/k6 run - < backend/test/k6/scenarios/s
 Catches style and static analysis issues before tests run.
 
 ```yaml
-- docker compose exec app npm run lint
-- docker compose exec app npm run format -- --check
+- docker compose exec backend npm run lint
+- docker compose exec backend npm run format -- --check
 - docker compose exec frontend npm run lint
 - docker compose exec frontend npm run format:check
 ```
@@ -195,7 +195,7 @@ Catches style and static analysis issues before tests run.
 Fast isolated tests. Fail the build if coverage drops below thresholds.
 
 ```yaml
-- docker compose exec app npm run test:unit
+- docker compose exec backend npm run test:unit
 - docker compose exec frontend npm run test:coverage
 ```
 
@@ -215,8 +215,8 @@ services:
   - redis:7-alpine
 
 steps:
-  - docker compose exec app npm run test:integration
-  - docker compose exec app npm run test:regression
+  - docker compose exec backend npm run test:integration
+  - docker compose exec backend npm run test:regression
 ```
 
 ### Stage 4: Smoke (post-deploy to staging)
@@ -224,7 +224,7 @@ steps:
 Validates the deployed staging environment before production promotion.
 
 ```yaml
-- docker compose exec app npm run test:smoke
+- docker compose exec backend npm run test:smoke
 ```
 
 ### Stage 5: Load Tests (scheduled / manual trigger)
@@ -245,7 +245,7 @@ Results feed into Grafana dashboards for trend analysis.
 ### Backend
 
 ```bash
-docker compose exec app npm run test:coverage
+docker compose exec backend npm run test:coverage
 # Output: backend/coverage/ (html, lcov, text)
 ```
 
@@ -297,7 +297,7 @@ For isolated CI runs, override `DATABASE_URL` to point to a disposable test data
 |---------|----------|
 | Tests timeout during app bootstrap | Increase lifecycle hook timeout to 30000ms |
 | Redis connection refused | Verify Redis container is healthy: `docker compose ps` |
-| Prisma client not generated | Run `docker compose exec app npx prisma generate` |
+| Prisma client not generated | Run `docker compose exec backend npx prisma generate` |
 | Port conflicts on test run | Stop other instances: `docker compose down` first |
 | k6 command not found | Install: `brew install k6` (macOS) or `apt install k6` (Linux) |
 | Coverage below threshold | Check recent changes for untested code paths |

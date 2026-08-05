@@ -71,10 +71,10 @@ cp frontend/.env.example frontend/.env.development
 docker compose up -d
 
 # Run database migrations
-docker compose exec app npx prisma migrate deploy
+docker compose exec backend npx prisma migrate deploy
 
 # Generate Prisma client
-docker compose exec app npx prisma generate
+docker compose exec backend npx prisma generate
 ```
 
 ### 3. Verify
@@ -139,11 +139,18 @@ enquiry-backend-platform/
 
 | Document | Description |
 |----------|-------------|
+| [docs/deliverables.md](docs/deliverables.md) | Complete delivery summary and assessment compliance matrix |
+| [docs/backend-architecture.md](docs/backend-architecture.md) | Full backend architecture, patterns, and flows |
+| [docs/frontend-architecture.md](docs/frontend-architecture.md) | Full frontend architecture, patterns, and flows |
+| [docs/ci-cd-pipeline.md](docs/ci-cd-pipeline.md) | CI/CD pipeline gates, deployment, and rollback |
 | [docs/API.md](docs/API.md) | API reference, Swagger UI links, endpoint overview |
+| [docs/DATABASE_SCHEMA.md](docs/DATABASE_SCHEMA.md) | Database models, indexes, relationships |
 | [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) | VPS setup, Docker deployment, SSL configuration |
 | [docs/ENVIRONMENT.md](docs/ENVIRONMENT.md) | Complete environment variable reference |
 | [docs/PERFORMANCE.md](docs/PERFORMANCE.md) | Performance optimizations and rationale |
 | [docs/RUNBOOK.md](docs/RUNBOOK.md) | Incident response, scaling, backup, rollback |
+| [docs/testing.md](docs/testing.md) | Test strategy, commands, CI integration |
+| [SECURITY_REPORT.md](SECURITY_REPORT.md) | Security assessment, vulnerabilities, threat analysis |
 
 ---
 
@@ -178,7 +185,7 @@ See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for full instructions.
 Quick deploy:
 ```bash
 docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
-docker compose exec app npx prisma migrate deploy
+docker compose exec backend npx prisma migrate deploy
 ```
 
 ---
@@ -196,3 +203,16 @@ docker compose exec app npx prisma migrate deploy
 ## License
 
 UNLICENSED — Private repository.
+
+---
+
+## Production URLs
+
+| Service | URL |
+|---------|-----|
+| Frontend | https://enquiry-hub.karthikmuneeswaran.com |
+| Backend API | https://enquiry-hub-backend.karthikmuneeswaran.com/api/v1 |
+| GraphQL | https://enquiry-hub-backend.karthikmuneeswaran.com/graphql |
+| Swagger Docs | https://enquiry-hub-backend.karthikmuneeswaran.com/api/docs |
+| WordPress | https://enquiry-hub-wp.karthikmuneeswaran.com |
+| Grafana | https://enquiry-hub-grafana.karthikmuneeswaran.com |

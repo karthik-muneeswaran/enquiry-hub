@@ -21,6 +21,118 @@ This document provides a top-level overview of everything delivered in the Enqui
 
 ---
 
+## Assessment Requirements — Compliance Matrix
+
+### Task 1: Backend API Development
+
+| Requirement | Status | Implementation |
+|-------------|--------|----------------|
+| POST `/api/enquiry` — Create new enquiry | Done | `POST /api/v1/enquiry` with validation, idempotency, duplicate detection |
+| GET `/api/enquiry/:id` — Retrieve enquiry | Done | `GET /api/v1/enquiry/:id` with ETag caching, 304 support |
+| GET `/api/enquiries` — Paginated enquiry list | Done | `GET /api/v1/enquiries` with cursor pagination, search, filter, sort |
+| POST `/api/webhook/crm` — Simulated CRM webhook | Done | `POST /api/v1/webhook/crm` with HMAC-SHA256 verification, deduplication |
+| Request validation | Done | class-validator with whitelist + forbidNonWhitelisted |
+| Input sanitisation | Done | Custom SanitizationPipe (runs before validation) |
+| Proper error handling | Done | GlobalExceptionFilter with structured error codes, Prisma error mapping |
+| Rate limiting | Done | Two layers — NGINX zone-based (L1) + Redis sliding window (L2) |
+| Secure API responses | Done | TransformInterceptor envelope, no internal leaks, PII redaction |
+| Duplicate request prevention | Done | Redis-based idempotency keys (24h) + duplicate detection (10min window) |
+| Proper schema design | Done | 4 models (Enquiry, WebhookEvent, Property, AuditLog) with Prisma/PostgreSQL |
+| Index optimisation | Done | Composite indexes `(email, propertyId, createdAt)`, status, createdAt |
+| Relationship handling | Done | Enquiry → WebhookEvent relation, AuditLog entity references |
+| Query optimisation | Done | Cursor pagination (O(1) any page), DataLoader for N+1 prevention |
+| Duplicate detection logic | Done | Redis-first + DB fallback (same email + property within 10min) |
+| Handling large datasets efficiently | Done | Cursor-based pagination, no OFFSET, SWR caching |
+| Queue / Async processing | Done | BullMQ with 4 queues: email, push, CRM sync, maintenance |
+
+### Task 2: Performance Optimisation & Debugging
+
+| Issue | Root Cause | Fix Implemented |
+|-------|-----------|-----------------|
+| N+1 query problem | GraphQL resolvers loading relations one-by-one | DataLoader batching (2 queries instead of N+1) |
+| Slow pagination | OFFSET/LIMIT degrades with page depth | Cursor-based pagination with composite index seek |
+| Cache stampede | Multiple concurrent requests fetching same expired key | Redis distributed mutex (SET NX PX) |
+| Redis round-trip overhead | Sequential cache operations | Redis pipelining for bulk operations |
+| Event loop blocking under load | Heavy request volume saturates single thread | Load shedding (503 + Retry-After when lag > 200ms) |
+| External service failures cascading | WordPress downtime blocking API responses | Circuit breaker (opossum) with cache-as-fallback |
+| Memory pressure from cache | Unbounded cache growth | LRU eviction (1000 items), SWR with 15min expiry |
+
+### Task 3: WordPress Headless CMS Integration
+
+| Requirement | Status | Implementation |
+|-------------|--------|----------------|
+| Fetches property content from WordPress | Done | `WordPressClient` using WPGraphQL with Axios |
+| Exposes optimised API responses | Done | GraphQL `properties` + `property` queries via Apollo Server |
+| Implements caching | Done | Redis SWR cache (5min stale / 15min expire) |
+| Handles stale cache invalidation | Done | Stale-While-Revalidate — serves stale, refreshes in background |
+| Minimises unnecessary requests | Done | Circuit breaker skips requests when WordPress is down; cache-first reads |
+
+### Task 4: Security Assessment
+
+| Deliverable | Status | Location |
+|-------------|--------|----------|
+| SECURITY_REPORT.md | Done | `SECURITY_REPORT.md` (auto-generated weekly via CI) |
+| Vulnerability documentation (OWASP format) | Done | Includes vulnerability name, category, severity, affected file, PoC, fix |
+| Automated security scanning | Done | Trivy (container + filesystem) + npm audit + Gitleaks |
+
+### Task 5: Threat Scenario Analysis
+
+| Scenario | Defence Implemented |
+|----------|---------------------|
+| Flood with fake enquiries (automated scripts) | L1 NGINX rate limit (10/min POST) + L2 Redis sliding window + duplicate detection + idempotency keys |
+| Abuse CRM webhook to inject malicious data | HMAC-SHA256 signature verification (timing-safe) + input sanitisation + event deduplication |
+| Overload API to crash backend | Rate limiting (L1+L2) + load shedding (503 at 200ms lag) + PM2 cluster mode + connection limits (50/IP) |
+| Retrieve sensitive info from API errors | GlobalExceptionFilter never leaks internals; generic "unexpected error" for 500s; PII redaction in logs |
+| Exploit weak validation to inject payloads | SanitizationPipe + ValidationPipe (whitelist, forbidNonWhitelisted) + Prisma parameterised queries |
+
+### Task 6: Deployment & Production Setup
+
+| Requirement | Status | Implementation |
+|-------------|--------|----------------|
+| Non-root deployment user | Done | `deploy` user created via hardening script; SSH key-only auth |
+| Docker-based deployment | Done | Docker Compose with production overlay (`docker-compose.prod.yml`) |
+| PM2 process management | Done | `pm2-runtime` inside backend container (cluster mode) |
+| Nginx reverse proxy | Done | NGINX with upstream keepalive, rate limiting zones, request ID forwarding |
+| HTTPS using Let's Encrypt | Done | Multi-domain cert (TLS 1.2+, HSTS 2yr, preload) |
+| Firewall configuration | Done | UFW (ports 80, 443, SSH only); fail2ban for brute-force protection |
+| Environment variable management | Done | `.env` files with Joi validation at startup; secrets via GitHub Secrets in CI |
+| Logging strategy | Done | Pino structured JSON → Promtail → Loki; trace ID correlation; PII redaction |
+| Health check endpoint | Done | `/health/live` (liveness) + `/health/ready` (readiness with dependency checks) |
+
+---
+
+### Bonus Tasks Delivered
+
+| Bonus Task | Status | Implementation |
+|------------|--------|----------------|
+| CI/CD pipeline | Done | 3 GitHub Actions workflows (backend 6-gate, frontend 5-gate, weekly security) |
+| Redis caching strategy | Done | Multi-tier SWR (Redis + in-memory LRU fallback), stampede protection, pattern invalidation |
+| API response caching | Done | ETag + If-None-Match (304), SWR cache-aside, write-through on mutations |
+| Webhook retry handling | Done | BullMQ 3 attempts with exponential backoff (1s, 4s, 16s) |
+| Dead-letter queue implementation | Done | Failed jobs retained (`removeOnFail: false`); admin endpoint to retry/inspect DLQ |
+| Monitoring & alerts | Done | Prometheus + Grafana (4 dashboards) + 8 alert rules + Loki logs + Tempo traces |
+| Load testing | Done | k6 load test scripts for capacity planning |
+| Automated deployment workflow | Done | GitHub Actions SSH deploy → health check → auto-rollback on smoke failure |
+
+---
+
+### Output Requirements
+
+| Required Output | Status | Location |
+|-----------------|--------|----------|
+| Live HTTPS URL | Done | `https://enquiry-hub-backend.karthikmuneeswaran.com` |
+| GitHub repository | Done | This repository |
+| README.md | Done | Root `README.md` |
+| DEPLOYMENT.md | Done | `docs/DEPLOYMENT.md` |
+| SECURITY_REPORT.md | Done | `SECURITY_REPORT.md` (auto-generated weekly) |
+| Database schema | Done | `backend/prisma/schema.prisma` + `docs/DATABASE_SCHEMA.md` |
+| API documentation | Done | Swagger at `/api/docs` + `docs/API.md` |
+| Postman collection | Done | `postman/Enquiry-Platform.postman_collection.json` + environments |
+| Docker configuration | Done | `docker-compose.yml` + `docker-compose.prod.yml` + Dockerfiles |
+| Screenshots folder | Pending | `screenshots/` — to be captured from running production |
+
+---
+
 ## Technology Stack
 
 ### Backend
@@ -68,7 +180,7 @@ This document provides a top-level overview of everything delivered in the Enqui
 |-----------|-----------|---------|
 | Reverse Proxy | NGINX 1.25 | SSL termination, routing, rate limiting |
 | Containerization | Docker + Docker Compose | Service orchestration |
-| Process Manager | PM2 (inside container) | Node.js cluster mode |
+| Process Manager | PM2 (inside backend container) | Node.js cluster mode, zero-downtime restarts |
 | SSL | Let's Encrypt | TLS certificates |
 | CI/CD | GitHub Actions | Automated pipeline |
 | Secret Scanning | Gitleaks | Pre-commit secret detection |
@@ -149,7 +261,7 @@ This document provides a top-level overview of everything delivered in the Enqui
 
 | Service | Port (Internal) | Exposed Port (Prod) | Role |
 |---------|----------------|---------------------|------|
-| Backend (NestJS) | 3000 | Via NGINX (443) | REST API + GraphQL + Queue workers |
+| Backend (NestJS + PM2) | 3000 | Via NGINX (443) | REST API + GraphQL + Queue workers (PM2 cluster mode) |
 | Frontend (React/NGINX) | 80 | Via NGINX (443) | Static SPA serving |
 | NGINX (Reverse Proxy) | 80, 443 | 80, 443 | SSL, routing, L1 rate limiting |
 
@@ -634,6 +746,17 @@ docker compose exec backend npx prisma db seed
 | All exporters | 64 MB each | 0.25 cores | unless-stopped |
 
 **Note:** Docker Compose resource limits are soft caps. The 2-CPU / 4GB droplet relies on Docker's CPU sharing and memory overcommit — services are scheduled across the available cores with priority-based allocation. Under normal load, the full stack runs comfortably within the 4 GB budget due to most services being idle or low-traffic.
+
+### PM2 (Process Manager inside Backend Container)
+
+The backend container uses **PM2 in cluster mode** (`pm2-runtime`) as the entry point in production:
+
+- Spawns multiple Node.js worker processes to utilize available CPU cores
+- `pm2-runtime` keeps the process running as PID 1 inside Docker
+- Zero-downtime restarts via `pm2 reload` — new workers start before old ones stop
+- Graceful shutdown: workers drain in-flight requests on SIGTERM (30s timeout)
+- Configured via `ecosystem.config.js` in the backend root
+- No PM2 installed on the host — it runs exclusively inside the Docker container
 
 ---
 

@@ -6,7 +6,8 @@ This document covers VPS setup, Docker deployment, SSL provisioning, and environ
 
 ## Prerequisites
 
-- Ubuntu 22.04 LTS VPS (minimum 4 CPU / 8GB RAM)
+- DigitalOcean Droplet (or equivalent VPS): 2 vCPUs / 4 GB RAM / 80 GB SSD
+- Ubuntu 24.04 LTS x64
 - Domain name pointing to VPS IP
 - SSH access with key-based authentication
 
@@ -158,7 +159,7 @@ cd frontend && npm ci && npm run build && cd ..
 docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
 
 # Run database migrations
-docker compose exec app npx prisma migrate deploy
+docker compose exec backend npx prisma migrate deploy
 
 # Verify health
 curl http://localhost:3000/health/ready
@@ -207,16 +208,16 @@ git pull origin main
 cd frontend && npm ci && npm run build && cd ..
 
 # 4. Rebuild and restart app
-docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build --no-deps app
+docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build --no-deps backend
 
 # 5. Run migrations
-docker compose exec app npx prisma migrate deploy
+docker compose exec backend npx prisma migrate deploy
 
 # 6. Run smoke tests
 SMOKE_BASE_URL=https://yourdomain.com npm run test:smoke --prefix backend
 
 # 7. If smoke tests fail, rollback
-# docker compose up -d --no-deps app  (uses .previous-image)
+# docker compose up -d --no-deps backend  (uses .previous-image)
 ```
 
 ### Zero-Downtime Restart
@@ -224,7 +225,7 @@ SMOKE_BASE_URL=https://yourdomain.com npm run test:smoke --prefix backend
 PM2 cluster mode with `reload` ensures new workers start before old ones stop:
 
 ```bash
-docker compose exec app npx pm2 reload ecosystem.config.js
+docker compose exec backend npx pm2 reload ecosystem.config.js
 ```
 
 ---
@@ -276,18 +277,18 @@ Backups are stored in `/backups/postgres/` with retention:
 docker compose logs -f --tail=100
 
 # Specific service
-docker compose logs app --tail=200
+docker compose logs backend --tail=200
 docker compose logs postgres --tail=50
 
 # Filter for errors
-docker compose logs app 2>&1 | grep -i error
+docker compose logs backend 2>&1 | grep -i error
 ```
 
 ### Restart Services
 
 ```bash
 # Restart single service
-docker compose restart app
+docker compose restart backend
 
 # Full stack restart
 docker compose down && docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d

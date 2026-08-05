@@ -9,3 +9,9 @@ CVE-2026-44902
 # Propagator-jaeger DoS via malformed HTTP header decoding
 # Fix requires: >= 2.9.0 (SDK v2 only)
 CVE-2026-59892
+
+# brace-expansion DoS vulnerabilities - only present in bundled npm (removed from production image)
+# Cannot override without breaking ESLint 8's minimatch dependency
+CVE-2026-13149
+CVE-2026-14257
+CVE-2026-69152

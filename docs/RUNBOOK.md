@@ -14,7 +14,7 @@ This document provides incident response procedures for each alert rule, scaling
 
 **Diagnosis:**
 1. Check Grafana API Performance dashboard for affected endpoints
-2. Check application logs: `docker compose logs app --tail=200 | grep ERROR`
+2. Check application logs: `docker compose logs backend --tail=200 | grep ERROR`
 3. Verify database connectivity: `docker compose exec postgres pg_isready`
 4. Verify Redis connectivity: `docker compose exec redis redis-cli ping`
 5. Check event loop lag gauge for load shedding activation
@@ -86,7 +86,7 @@ This document provides incident response procedures for each alert rule, scaling
 
 **Resolution:**
 - Kill long-running queries: `SELECT pg_terminate_backend(pid);`
-- Restart application to reset pool: `docker compose restart app`
+- Restart application to reset pool: `docker compose restart backend`
 - Increase pool size in DATABASE_URL (add `?connection_limit=20`)
 - Investigate and fix queries holding connections open
 
@@ -186,7 +186,7 @@ This document provides incident response procedures for each alert rule, scaling
    ```javascript
    instances: 4,  // or 'max' for all CPUs
    ```
-2. Restart app: `docker compose restart app`
+2. Restart app: `docker compose restart backend`
 3. Verify health: `curl http://localhost:3000/health/ready`
 
 ### Queue Worker Scaling
@@ -202,7 +202,7 @@ This document provides incident response procedures for each alert rule, scaling
 
 ```bash
 # 1. Stop the application
-docker compose stop app
+docker compose stop backend
 
 # 2. List available backups
 ls -la /backups/postgres/
@@ -211,10 +211,10 @@ ls -la /backups/postgres/
 ./scripts/restore.sh /backups/postgres/full_20250101_020000.sql.gz
 
 # 4. Run any pending migrations
-docker compose exec app npx prisma migrate deploy
+docker compose exec backend npx prisma migrate deploy
 
 # 5. Restart the application
-docker compose start app
+docker compose start backend
 
 # 6. Verify
 curl http://localhost:3000/health/ready
@@ -244,7 +244,7 @@ cd /opt/enquiry-platform
 cat .previous-image
 
 # 4. Rollback to previous image
-docker compose up -d --no-deps app
+docker compose up -d --no-deps backend
 
 # 5. Verify health
 curl http://localhost:3000/health/ready
@@ -267,10 +267,10 @@ If a migration caused issues:
 
 ### Application Won't Start
 
-1. Check logs: `docker compose logs app --tail=100`
+1. Check logs: `docker compose logs backend --tail=100`
 2. Verify env vars are set: `docker compose config`
-3. Check DB connectivity from app container
-4. Ensure migrations are applied: `docker compose exec app npx prisma migrate deploy`
+3. Check DB connectivity from backend container
+4. Ensure migrations are applied: `docker compose exec backend npx prisma migrate deploy`
 
 ### Queues Not Processing
 
