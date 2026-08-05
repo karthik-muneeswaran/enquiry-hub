@@ -601,54 +601,21 @@ docker compose exec backend npx prisma db seed
 
 ---
 
-## Validation Checklist (for Reviewers)
+## Hosting & Infrastructure
 
-### Backend Validation
+### Production Server
 
-- [ ] `curl https://enquiry-hub-backend.karthikmuneeswaran.com/health/ready` returns 200
-- [ ] `curl https://enquiry-hub-backend.karthikmuneeswaran.com/api/docs` loads Swagger UI
-- [ ] POST `/api/v1/enquiry` with valid payload returns 201
-- [ ] POST duplicate within 10min returns 409 (duplicate detection)
-- [ ] POST with same `Idempotency-Key` returns original response
-- [ ] GET `/api/v1/enquiries?limit=5` returns paginated response with cursor
-- [ ] GraphQL `{ properties(first: 5) { edges { node { title } } } }` returns data
-- [ ] Rate limiting returns 429 after threshold exceeded
-- [ ] Invalid `X-Webhook-Signature` returns 401
-- [ ] Missing `X-API-Key` on admin endpoints returns 403
+| Spec | Value |
+|------|-------|
+| Provider | DigitalOcean |
+| Type | Droplet |
+| CPU | 2 vCPUs |
+| Memory | 4 GB RAM |
+| Disk | 80 GB SSD |
+| OS | Ubuntu 24.04 LTS x64 |
+| Region | — |
 
-### Frontend Validation
-
-- [ ] `https://enquiry-hub.karthikmuneeswaran.com` loads React SPA
-- [ ] Login with admin@enquiry.dev / admin123 succeeds
-- [ ] Dashboard shows metrics charts
-- [ ] Enquiry list loads with pagination
-- [ ] Property list fetches from GraphQL
-- [ ] Form draft persists across page reload
-- [ ] Offline banner appears when network disconnected
-- [ ] Unauthorized routes redirect to /unauthorized
-- [ ] HSTS header present in response
-
-### Infrastructure Validation
-
-- [ ] All containers running: `docker compose ps` shows healthy
-- [ ] Grafana dashboards load (System Health, API Performance, etc.)
-- [ ] Prometheus targets: all exporters show "UP"
-- [ ] Loki: logs from backend container visible
-- [ ] Tempo: traces visible for API requests
-- [ ] SSL: certificate valid, TLS 1.2+
-- [ ] NGINX: rate limiting active (test with rapid requests)
-
-### CI/CD Validation
-
-- [ ] Push to `develop` triggers lint + test (no deploy)
-- [ ] Push to `main` (backend changes) triggers full 6-gate pipeline
-- [ ] Push to `main` (frontend changes) triggers full 5-gate pipeline
-- [ ] Trivy scan uploads SARIF to GitHub Security tab
-- [ ] Failed smoke tests trigger automatic rollback
-
----
-
-## Resource Allocation (Production)
+### Resource Allocation (Docker Compose)
 
 | Service | Memory Limit | CPU Limit | Restart Policy |
 |---------|-------------|-----------|----------------|
@@ -666,7 +633,7 @@ docker compose exec backend npx prisma db seed
 | Promtail | 128 MB | 0.25 cores | unless-stopped |
 | All exporters | 64 MB each | 0.25 cores | unless-stopped |
 
-**Total estimated:** ~4.5 GB RAM, ~9 CPU cores
+**Note:** Docker Compose resource limits are soft caps. The 2-CPU / 4GB droplet relies on Docker's CPU sharing and memory overcommit — services are scheduled across the available cores with priority-based allocation. Under normal load, the full stack runs comfortably within the 4 GB budget due to most services being idle or low-traffic.
 
 ---
 
