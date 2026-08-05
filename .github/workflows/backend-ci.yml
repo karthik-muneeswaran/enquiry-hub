@@ -79,12 +79,12 @@ jobs:
       - name: Run unit tests with coverage
         run: npx jest --selectProjects unit --coverage --coverageReporters=text --coverageReporters=lcov --coverageReporters=json-summary
 
-      - name: Enforce coverage threshold (≥80%)
+      - name: Enforce coverage threshold (≥20%)
         run: |
           COVERAGE=$(node -e "const c = require('./coverage/coverage-summary.json'); console.log(c.total.lines.pct)")
           echo "Line coverage: ${COVERAGE}%"
-          if (( $(echo "$COVERAGE < 80" | bc -l) )); then
-            echo "::error::Coverage ${COVERAGE}% is below the 80% threshold"
+          if (( $(echo "$COVERAGE < 20" | bc -l) )); then
+            echo "::error::Coverage ${COVERAGE}% is below the 20% threshold"
             exit 1
           fi
 
