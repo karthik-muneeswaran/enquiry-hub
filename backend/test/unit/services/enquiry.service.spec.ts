@@ -9,6 +9,8 @@ describe('EnquiryService', () => {
   let mockPrisma: any;
   let mockRepository: any;
   let mockRedis: any;
+  let mockCacheService: any;
+  let mockMetricsService: any;
   let mockNotificationProducer: any;
 
   const mockEnquiry = {
@@ -59,6 +61,25 @@ describe('EnquiryService', () => {
       set: jest.fn().mockResolvedValue('OK'),
     };
 
+    mockCacheService = {
+      get: jest.fn().mockResolvedValue(null),
+      set: jest.fn().mockResolvedValue(undefined),
+      invalidate: jest.fn().mockResolvedValue(undefined),
+      isDuplicate: jest.fn().mockResolvedValue(null),
+      getById: jest.fn().mockImplementation((_id, fetcher) => fetcher()),
+      getList: jest.fn().mockImplementation((_params, fetcher) => fetcher()),
+      onEnquiryCreated: jest.fn().mockResolvedValue(undefined),
+      onEnquiryUpdated: jest.fn().mockResolvedValue(undefined),
+      onEnquiryDeleted: jest.fn().mockResolvedValue(undefined),
+      setDuplicateMarker: jest.fn().mockResolvedValue(undefined),
+    };
+
+    mockMetricsService = {
+      incrementCounter: jest.fn(),
+      recordHistogram: jest.fn(),
+      setGauge: jest.fn(),
+    };
+
     mockNotificationProducer = {
       enqueueConfirmationEmail: jest.fn().mockResolvedValue(undefined),
       enqueueAdminNotification: jest.fn().mockResolvedValue(undefined),
@@ -67,7 +88,9 @@ describe('EnquiryService', () => {
     service = new EnquiryService(
       mockPrisma as unknown as PrismaService,
       mockRepository as unknown as EnquiryRepository,
+      mockCacheService,
       mockRedis,
+      mockMetricsService,
       mockNotificationProducer,
       undefined, // auditService
     );
@@ -163,7 +186,9 @@ describe('EnquiryService', () => {
       const serviceWithoutProducer = new EnquiryService(
         mockPrisma as unknown as PrismaService,
         mockRepository as unknown as EnquiryRepository,
+        mockCacheService,
         mockRedis,
+        mockMetricsService,
         undefined,
         undefined,
       );

@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication, ValidationPipe } from '@nestjs/common';
-import * as request from 'supertest';
+import { INestApplication, ValidationPipe, VersioningType } from '@nestjs/common';
+import request from 'supertest';
 import { AppModule } from '@/app.module';
 import { SanitizationPipe } from '@common/pipes';
 
@@ -21,6 +21,13 @@ describe('Regression: SQL Injection Prevention', () => {
     }).compile();
 
     app = moduleFixture.createNestApplication();
+    app.setGlobalPrefix('api', {
+      exclude: [{ path: 'health/(.*)', method: 0 }],
+    });
+    app.enableVersioning({
+      type: VersioningType.URI,
+      defaultVersion: '1',
+    });
     app.useGlobalPipes(
       new SanitizationPipe(),
       new ValidationPipe({
@@ -70,10 +77,10 @@ describe('Regression: SQL Injection Prevention', () => {
     expect(response.status).not.toBe(500);
     expect([200, 400, 429]).toContain(response.status);
 
-    if (response.status === 200 && response.body.data) {
+    if (response.status === 200 && response.body.data?.data) {
       // If it returns data, it should NOT be a full table dump
       // (the injection should be treated as literal search text)
-      expect(response.body.data.length).toBeLessThanOrEqual(100);
+      expect(response.body.data.data.length).toBeLessThanOrEqual(100);
     }
   });
 

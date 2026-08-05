@@ -115,7 +115,8 @@
       "^@modules/(.*)$": "<rootDir>/src/modules/$1",
       "^@database/(.*)$": "<rootDir>/src/database/$1",
       "^@queue/(.*)$": "<rootDir>/src/queue/$1",
-      "^@cache/(.*)$": "<rootDir>/src/cache/$1"
+      "^@cache/(.*)$": "<rootDir>/src/cache/$1",
+      "^@observability/(.*)$": "<rootDir>/src/observability/$1"
     },
     "projects": [
       {
@@ -129,7 +130,8 @@
           "^@modules/(.*)$": "<rootDir>/src/modules/$1",
           "^@database/(.*)$": "<rootDir>/src/database/$1",
           "^@queue/(.*)$": "<rootDir>/src/queue/$1",
-          "^@cache/(.*)$": "<rootDir>/src/cache/$1"
+          "^@cache/(.*)$": "<rootDir>/src/cache/$1",
+          "^@observability/(.*)$": "<rootDir>/src/observability/$1"
         }
       },
       {
@@ -143,7 +145,8 @@
           "^@modules/(.*)$": "<rootDir>/src/modules/$1",
           "^@database/(.*)$": "<rootDir>/src/database/$1",
           "^@queue/(.*)$": "<rootDir>/src/queue/$1",
-          "^@cache/(.*)$": "<rootDir>/src/cache/$1"
+          "^@cache/(.*)$": "<rootDir>/src/cache/$1",
+          "^@observability/(.*)$": "<rootDir>/src/observability/$1"
         }
       },
       {
@@ -157,7 +160,8 @@
           "^@modules/(.*)$": "<rootDir>/src/modules/$1",
           "^@database/(.*)$": "<rootDir>/src/database/$1",
           "^@queue/(.*)$": "<rootDir>/src/queue/$1",
-          "^@cache/(.*)$": "<rootDir>/src/cache/$1"
+          "^@cache/(.*)$": "<rootDir>/src/cache/$1",
+          "^@observability/(.*)$": "<rootDir>/src/observability/$1"
         }
       },
       {

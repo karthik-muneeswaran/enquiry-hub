@@ -5,6 +5,7 @@ import * as express from 'express';
 import { AppModule } from '@/app.module';
 import { SanitizationPipe } from '@/common/pipes';
 import { ContentTypeGuard } from '@/common/guards';
+import { GlobalExceptionFilter } from '@/common/filters';
 import { PrismaService } from '@/database/prisma.service';
 
 /**
@@ -41,8 +42,6 @@ export async function createTestApp(): Promise<{
   app.setGlobalPrefix('api', {
     exclude: [
       { path: 'health/(.*)', method: 0 },
-      { path: 'admin/(.*)', method: 0 },
-      { path: 'admin/(.*)', method: 2 },
     ],
   });
 
@@ -62,6 +61,8 @@ export async function createTestApp(): Promise<{
   );
 
   app.useGlobalGuards(new ContentTypeGuard());
+
+  app.useGlobalFilters(new GlobalExceptionFilter());
 
   app.enableCors({
     origin: '*',

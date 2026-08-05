@@ -67,7 +67,7 @@ describe('Enquiry Integration Tests', () => {
 
       expect(response.body.success).toBe(false);
       expect(response.body.error.code).toBeDefined();
-      expect(response.body.error.statusCode).toBe(400);
+      expect(response.body.error.message).toBeDefined();
     });
 
     it('should return 409 for duplicate enquiry within 10-minute window', async () => {
@@ -137,7 +137,7 @@ describe('Enquiry Integration Tests', () => {
         .expect(404);
 
       expect(response.body.success).toBe(false);
-      expect(response.body.error.statusCode).toBe(404);
+      expect(response.body.error.code).toBeDefined();
     });
   });
 
@@ -160,10 +160,10 @@ describe('Enquiry Integration Tests', () => {
         .expect(200);
 
       expect(response.body.success).toBe(true);
-      expect(response.body.data.length).toBe(2);
-      expect(response.body.meta.pagination).toBeDefined();
-      expect(response.body.meta.pagination.hasMore).toBe(true);
-      expect(response.body.meta.pagination.nextCursor).toBeDefined();
+      expect(response.body.data.data.length).toBe(2);
+      expect(response.body.data.pagination).toBeDefined();
+      expect(response.body.data.pagination.hasMore).toBe(true);
+      expect(response.body.data.pagination.nextCursor).toBeDefined();
     });
   });
 });

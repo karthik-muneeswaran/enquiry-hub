@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication, ValidationPipe } from '@nestjs/common';
-import * as request from 'supertest';
+import { INestApplication, ValidationPipe, VersioningType } from '@nestjs/common';
+import request from 'supertest';
 import * as express from 'express';
 import { AppModule } from '@/app.module';
 import { SanitizationPipe } from '@common/pipes';
@@ -26,6 +26,13 @@ describe('Regression: Oversized Payload Rejection', () => {
     // Apply body size limit (same as main.ts)
     app.use(express.json({ limit: '1mb' }));
 
+    app.setGlobalPrefix('api', {
+      exclude: [{ path: 'health/(.*)', method: 0 }],
+    });
+    app.enableVersioning({
+      type: VersioningType.URI,
+      defaultVersion: '1',
+    });
     app.useGlobalPipes(
       new SanitizationPipe(),
       new ValidationPipe({
