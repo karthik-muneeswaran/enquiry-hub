@@ -250,7 +250,7 @@ export function MetricsDashboardPage() {
         <motion.div variants={itemVariants} className="h-full">
           <StatCard
             title="Completed"
-            value={totalCompleted.toLocaleString()}
+            value={completedCount.toLocaleString()}
             icon={<CheckCircleIcon className="h-6 w-6" />}
             trend={{ value: 8, label: 'vs last week', positive: true }}
             className="h-full"

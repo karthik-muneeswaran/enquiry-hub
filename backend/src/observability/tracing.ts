@@ -34,7 +34,10 @@ const otelSDK = new NodeSDK({
         enabled: false,
       },
       '@opentelemetry/instrumentation-http': {
-        ignoreIncomingPaths: ['/health', '/metrics'],
+        ignoreIncomingRequestHook: (req) => {
+          const path = req.url || '';
+          return path.startsWith('/health') || path.startsWith('/metrics');
+        },
       },
       '@opentelemetry/instrumentation-pg': {
         enhancedDatabaseReporting: true,

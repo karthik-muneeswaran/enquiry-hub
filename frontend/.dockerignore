@@ -5,10 +5,38 @@ coverage
 .env.*
 !.env.example
 *.log
+
+# Version control
 .git
 .gitignore
+
+# IDE
 .vscode
 .idea
+
+# Testing
+test
+vitest.config.ts
 junit-report.xml
 playwright-report
 test-results
+
+# Documentation
+README*
+docs
+CHANGELOG*
+LICENSE
+
+# CI/CD
+.github
+.gitlab-ci.yml
+
+# Linting/formatting (not needed at build time)
+.eslintrc*
+.prettierrc*
+.prettier*
+
+# Docker files (avoid recursive context)
+Dockerfile
+.dockerignore
+docker-compose*

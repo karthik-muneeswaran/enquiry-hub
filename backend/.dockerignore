@@ -4,4 +4,37 @@ coverage
 .env
 .env.*
 *.log
+
+# Version control
 .git
+.gitignore
+
+# IDE
+.vscode
+.idea
+
+# Testing
+test
+jest.config*
+tsconfig.test.json
+junit-report.xml
+
+# Documentation
+README*
+docs
+CHANGELOG*
+LICENSE
+
+# CI/CD
+.github
+.gitlab-ci.yml
+
+# Linting/formatting (not needed at runtime)
+.eslintrc*
+.prettierrc*
+.prettier*
+
+# Docker files (avoid recursive context)
+Dockerfile
+.dockerignore
+docker-compose*

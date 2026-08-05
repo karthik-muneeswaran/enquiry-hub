@@ -9,7 +9,7 @@ services:
       context: ./backend
       dockerfile: Dockerfile
       target: production
-    command: []
+    command: ["pm2-runtime", "ecosystem.config.js"]
     ports: []
     volumes: []
     env_file:
@@ -40,12 +40,15 @@ services:
       args:
         VITE_API_BASE_URL: ${VITE_API_BASE_URL:-https://enquiry-hub-backend.karthikmuneeswaran.com/api/v1}
         VITE_GRAPHQL_URL: ${VITE_GRAPHQL_URL:-https://enquiry-hub-backend.karthikmuneeswaran.com/graphql}
-        VITE_ADMIN_API_KEY: ${VITE_ADMIN_API_KEY:-}
-    command: []
+    command: ["nginx", "-g", "daemon off;"]
     ports: []
     volumes: []
-    env_file:
-      - ./frontend/.env
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:80/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
     deploy:
       resources:
         limits:
@@ -67,15 +70,24 @@ services:
       - /etc/letsencrypt:/etc/letsencrypt:ro
       - /var/www/certbot:/var/www/certbot:ro
     depends_on:
-      - backend
-      - frontend
-      - grafana
+      backend:
+        condition: service_healthy
+      frontend:
+        condition: service_healthy
+      grafana:
+        condition: service_started
     deploy:
       resources:
         limits:
           memory: 128M
           cpus: "0.5"
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/stub_status"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
     networks:
       - enquiry-hub-network
 

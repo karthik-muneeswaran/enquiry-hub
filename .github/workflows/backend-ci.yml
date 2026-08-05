@@ -192,16 +192,10 @@ jobs:
         uses: aquasecurity/trivy-action@master
         with:
           image-ref: enquiry-backend:${{ github.sha }}
-          format: 'sarif'
-          output: 'trivy-results.sarif'
+          format: 'table'
           severity: 'HIGH,CRITICAL'
           exit-code: '1'
-
-      - name: Upload Trivy scan results
-        uses: github/codeql-action/upload-sarif@v3
-        if: always()
-        with:
-          sarif_file: trivy-results.sarif
+          trivyignores: backend/.trivyignore
 
   # ─────────────────────────────────────────────────────────────────────────────
   # Gate 5: Deploy to VPS (main branch only)
