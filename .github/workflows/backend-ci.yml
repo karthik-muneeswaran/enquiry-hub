@@ -224,7 +224,7 @@ jobs:
             # Wait for health check
             sleep 15
             # Run database migrations
-            docker compose exec -T backend npx prisma migrate deploy
+            docker compose exec -T backend node_modules/.bin/prisma migrate deploy
             # Verify health
             curl -sf http://localhost:3000/health/ready || exit 1
             echo "Backend deployed successfully"
