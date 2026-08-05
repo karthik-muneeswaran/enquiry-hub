@@ -224,10 +224,10 @@ jobs:
             # Run database migrations
             sleep 10
             docker compose exec -T backend node_modules/.bin/prisma migrate deploy
-            # Wait for health check (retry up to 60s)
+            # Wait for health check (retry up to 60s, check from inside the Docker network)
             echo "Waiting for backend to become ready..."
             for i in $(seq 1 12); do
-              if curl -sf http://localhost:3000/health/ready > /dev/null 2>&1; then
+              if docker compose exec -T backend wget -qO- http://localhost:3000/health/ready > /dev/null 2>&1; then
                 echo "Backend deployed successfully"
                 exit 0
               fi
@@ -282,7 +282,7 @@ jobs:
             docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build --no-deps backend
             echo "Waiting for rollback to become ready..."
             for i in $(seq 1 12); do
-              if curl -sf http://localhost:3000/health/ready > /dev/null 2>&1; then
+              if docker compose exec -T backend wget -qO- http://localhost:3000/health/ready > /dev/null 2>&1; then
                 echo "Rollback complete and healthy"
                 exit 0
               fi
