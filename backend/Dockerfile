@@ -49,6 +49,6 @@ USER appuser
 EXPOSE 3000 8081
 
 HEALTHCHECK --interval=30s --timeout=5s --retries=3 --start-period=10s \
-  CMD wget -qO- http://localhost:3000/health/ready || exit 1
+  CMD wget -qO- http://localhost:3000/v1/health/ready || exit 1
 
 CMD ["pm2-runtime", "ecosystem.config.js"]
