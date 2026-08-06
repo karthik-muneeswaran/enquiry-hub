@@ -62,8 +62,6 @@ async function bootstrap() {
       .setTitle('Enquiry Backend Platform')
       .setDescription('API for managing property enquiries, CRM integrations, and notifications')
       .setVersion('1.0.0')
-      .addServer('https://enquiry-hub-backend.karthikmuneeswaran.com/', 'Production')
-      .addServer('http://localhost:3000/', 'Local Development')
       .addApiKey({ type: 'apiKey', name: 'X-API-Key', in: 'header' }, 'api-key')
       .addTag('Enquiry', 'Property enquiry CRUD operations')
       .addTag('Webhook', 'CRM webhook ingestion')
